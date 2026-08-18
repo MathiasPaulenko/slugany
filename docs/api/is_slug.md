@@ -1,0 +1,1 @@
+::: slugany.is_slug

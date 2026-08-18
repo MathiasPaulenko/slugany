@@ -1,0 +1,1 @@
+::: slugany.slugify_batch

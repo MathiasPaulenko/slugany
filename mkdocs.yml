@@ -1,0 +1,75 @@
+site_name: slugany
+site_description: Slugify multi-idioma, zero deps. Alternativa simple a python-slugify sin GPL.
+site_url: https://mathiaspaulenko.github.io/slugany/
+repo_url: https://github.com/MathiasPaulenko/slugany
+repo_name: MathiasPaulenko/slugany
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Home: index.md
+  - Usage:
+      - Basic: usage/basic.md
+      - Styles & Presets: usage/styles.md
+      - Languages: usage/languages.md
+      - CLI: usage/cli.md
+  - Guide:
+      - Migration from python-slugify: guide/migration.md
+      - Performance: guide/performance.md
+      - Contracts: guide/contracts.md
+  - API Reference:
+      - slugify(): api/slugify.md
+      - slugify_batch(): api/slugify_batch.md
+      - is_slug(): api/is_slug.md
+  - Changelog: changelog.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+            docstring_style: google
+            show_signature_annotations: true
+            separate_signature: true
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
