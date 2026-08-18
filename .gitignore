@@ -27,6 +27,12 @@ htmlcov/
 .mypy_cache/
 .pyre/
 
+# Linting
+.ruff_cache/
+
+# Docs build
+site/
+
 # IDE
 .idea/
 .vscode/
