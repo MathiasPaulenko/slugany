@@ -1,12 +1,32 @@
-from slugany._tables import (
-    _PUNCTUATION_TABLE,
-    _ES_TABLE,
-    _PT_TABLE,
-    _DE_TABLE,
-    _LANGUAGE_TABLES,
-    _CONFUSABLES,
+from slugany._config import _STYLE_PRESETS, SlugConfig
+from slugany._pipeline import _run_pipeline
+from slugany._slugify import _slugify_cached, slugify, slugify_batch
+from slugany._steps import (
+    _apply_case_style,
+    _apply_fallback,
+    _apply_replacements_post,
+    _apply_replacements_pre,
+    _collapse_separators,
+    _deconfuse,
+    _handle_emoji,
+    _html_entities_decode,
+    _lowercase,
+    _normalize_punctuation,
+    _remove_stopwords,
+    _replace_non_alphanumeric,
+    _transliterate,
+    _trim_separators,
+    _truncate,
 )
-from slugany._config import SlugConfig, _STYLE_PRESETS
+from slugany._tables import (
+    _CONFUSABLES,
+    _DE_TABLE,
+    _ES_TABLE,
+    _LANGUAGE_TABLES,
+    _PT_TABLE,
+    _PUNCTUATION_TABLE,
+)
+from slugany._validator import is_slug
 
 assert "Bob\u2019s".translate(_PUNCTUATION_TABLE) == "Bob's"
 assert "a\u2014b".translate(_PUNCTUATION_TABLE) == "a-b"
@@ -29,7 +49,7 @@ assert c.max_length == 0
 assert c.word_boundary is False
 assert c.stopwords == frozenset()
 assert c.allow_unicode is False
-assert c.replacements == frozenset()
+assert c.replacements == ()
 assert c.style is None
 assert c.lang == "auto"
 assert c.fallback == ""
@@ -54,18 +74,20 @@ assert c3.separator == "_"
 c4 = SlugConfig.from_kwargs(style="filename")
 assert c4.lowercase is False
 
-from slugany._steps import _normalize_punctuation, _html_entities_decode, _apply_replacements_pre, _handle_emoji, _deconfuse, _transliterate, _apply_replacements_post, _lowercase, _remove_stopwords, _replace_non_alphanumeric, _collapse_separators, _trim_separators, _truncate, _apply_case_style, _apply_fallback
-
 assert _normalize_punctuation("Bob's caf\u00e9", SlugConfig()) == "Bob's caf\u00e9"
 assert _html_entities_decode("Bob&amp;Caf\u00e9", SlugConfig()) == "Bob&Caf\u00e9"
 assert _apply_replacements_pre("Hello", SlugConfig.from_kwargs(replacements={"ll": "2"})) == "He2o"
-assert _handle_emoji("Hello \U0001F389 World", SlugConfig()) == "Hello  World"
+assert _handle_emoji("Hello \U0001f389 World", SlugConfig()) == "Hello  World"
 assert _deconfuse("\u0441afe", SlugConfig()) == "cafe"
 assert _transliterate("Espa\u00f1a", SlugConfig(lang="es")) == "Espana"
 assert _transliterate("\u00dcbung", SlugConfig(lang="de")) == "Uebung"
+assert _transliterate("Stra\u00dfe", SlugConfig()) == "Strasse"
+assert _transliterate("C\u0153ur", SlugConfig()) == "Coeur"
 assert _apply_replacements_post("hello", SlugConfig.from_kwargs(replacements={"ll": "2"})) == "he2o"
 assert _lowercase("Hello", SlugConfig()) == "hello"
-assert _remove_stopwords("the hello world", SlugConfig(stopwords=frozenset({"the"}))) == "hello world"
+assert (
+    _remove_stopwords("the hello world", SlugConfig(stopwords=frozenset({"the"}))) == "hello world"
+)
 assert _replace_non_alphanumeric("Hello World!!!", SlugConfig()) == "Hello-World-"
 assert _collapse_separators("a---b", SlugConfig()) == "a-b"
 assert _trim_separators("-hello-world-", SlugConfig()) == "hello-world"
@@ -74,19 +96,13 @@ assert _truncate("hello-world-foo", SlugConfig(max_length=10, word_boundary=True
 assert _apply_case_style("hello-world", SlugConfig.from_kwargs(style="camel")) == "helloWorld"
 assert _apply_fallback("", SlugConfig(fallback="untitled")) == "untitled"
 
-from slugany._pipeline import _run_pipeline
-
 assert _run_pipeline("\u00a1Hola Mundo!", SlugConfig()) == "hola-mundo"
 assert _run_pipeline("Caf\u00e9 r\u00e9sum\u00e9", SlugConfig()) == "cafe-resume"
-
-from slugany._slugify import _slugify_cached, slugify, slugify_batch
 
 assert _slugify_cached("Hola", SlugConfig()) == "hola"
 assert slugify("\u00a1Hola Mundo!") == "hola-mundo"
 assert slugify.cache_info() is not None
 assert slugify_batch(["Hello World", "Caf\u00e9"]) == ["hello-world", "cafe"]
-
-from slugany._validator import is_slug
 
 assert is_slug("hello-world") is True
 assert is_slug("hello world") is False

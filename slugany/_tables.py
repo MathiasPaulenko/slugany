@@ -94,6 +94,18 @@ _FR_IT_TABLE: dict[int, str] = {
     ord("Ù"): "U",
 }
 
+_DEFAULT_TABLE: dict[int, str] = {
+    ord("ß"): "ss",
+    ord("Æ"): "AE",
+    ord("æ"): "ae",
+    ord("Œ"): "OE",
+    ord("œ"): "oe",
+    ord("Ð"): "D",
+    ord("ð"): "d",
+    ord("Þ"): "TH",
+    ord("þ"): "th",
+}
+
 _LANGUAGE_TABLES: dict[str, dict[int, str]] = {
     "es": _ES_TABLE,
     "pt": _PT_TABLE,

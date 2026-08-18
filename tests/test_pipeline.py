@@ -55,3 +55,28 @@ class TestPipeline:
 
     def test_emoji_strip(self) -> None:
         assert _run_pipeline("Hello \U0001f389 World", SlugConfig()) == "hello-world"
+
+    def test_css_safe(self) -> None:
+        cfg = SlugConfig(css_safe=True)
+        assert _run_pipeline("123 hello", cfg) == "s-123-hello"
+
+    def test_css_safe_not_triggered(self) -> None:
+        cfg = SlugConfig(css_safe=True)
+        assert _run_pipeline("hello 123", cfg) == "hello-123"
+
+    def test_case_style_camel(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _run_pipeline("hello world", cfg) == "helloWorld"
+
+    def test_case_style_train(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="train")
+        assert _run_pipeline("hello world", cfg) == "Hello-World"
+
+    def test_confusables(self) -> None:
+        assert _run_pipeline("\u0441afe", SlugConfig()) == "cafe"
+
+    def test_short_circuit_empty(self) -> None:
+        assert _run_pipeline("!!!", SlugConfig(fallback="fb")) == "fb"
+
+    def test_short_circuit_no_fallback(self) -> None:
+        assert _run_pipeline("!!!", SlugConfig()) == ""

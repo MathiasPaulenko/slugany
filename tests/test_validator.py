@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from slugany import is_slug
 
 
@@ -42,3 +44,22 @@ class TestIsSlug:
 
     def test_custom_separator_double(self) -> None:
         assert is_slug("hello--world", separator="--") is True
+
+    def test_unicode_slug_default(self) -> None:
+        assert is_slug("espa\u00f1a") is False
+
+    def test_unicode_slug_allowed(self) -> None:
+        assert is_slug("espa\u00f1a", allow_unicode=True) is True
+
+    def test_unicode_slug_with_separator(self) -> None:
+        assert is_slug("espa\u00f1a-mundo", allow_unicode=True) is True
+
+    def test_unicode_slug_invalid_chars(self) -> None:
+        assert is_slug("espa\u00f1a mundo", allow_unicode=True) is False
+
+    def test_unicode_slug_leading_sep(self) -> None:
+        assert is_slug("-espa\u00f1a", allow_unicode=True) is False
+
+    def test_non_string_input_raises(self) -> None:
+        with pytest.raises(TypeError):
+            is_slug(123)  # type: ignore[arg-type]

@@ -47,6 +47,7 @@ nav:
       - slugify(): api/slugify.md
       - slugify_batch(): api/slugify_batch.md
       - is_slug(): api/is_slug.md
+      - SlugConfig: api/slugconfig.md
   - Changelog: changelog.md
 
 plugins:

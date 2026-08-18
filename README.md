@@ -17,7 +17,7 @@ Slugify multi-idioma, zero dependencias. Alternativa simple a `python-slugify` s
 - **CLI incluido** — `slugany "texto"` desde terminal con auto-stdin
 - **lru_cache** — resultados cacheados automáticamente (maxsize=512)
 - **Idempotente** — `slugify(slugify(x)) == slugify(x)` garantizado
-- **~200 líneas core** — auditable, sin bloat
+- **~550 líneas core** — auditable, sin bloat
 
 ## Install
 
@@ -91,12 +91,12 @@ slugify("Hello World", separator="_")
 ## Why slugany?
 
 | Aspect | python-slugify | slugany |
-|--------|---------------|---------|
+| ------ | -------------- | ------- |
 | Dependencies | text-unidecode (GPL) | Zero |
 | License | GPL | MIT |
 | Multi-language | Limited | Built-in tables (es, pt, de, fr, it) |
 | Caching | No | `lru_cache` built-in |
-| Core size | ~1000+ lines | ~200 lines |
+| Core size | ~1000+ lines | ~550 lines |
 
 ## License
 

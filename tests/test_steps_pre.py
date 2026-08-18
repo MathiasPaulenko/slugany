@@ -105,6 +105,24 @@ class TestTransliterate:
     def test_nfkd(self) -> None:
         assert _transliterate("caf\u00e9", SlugConfig()) == "cafe"
 
+    def test_default_table_ss(self) -> None:
+        assert _transliterate("Stra\u00dfe", SlugConfig()) == "Strasse"
+
+    def test_default_table_oe(self) -> None:
+        assert _transliterate("C\u0153ur", SlugConfig()) == "Coeur"
+
+    def test_default_table_ae(self) -> None:
+        assert _transliterate("\u00c6lfred", SlugConfig()) == "AElfred"
+
+    def test_default_table_thorn(self) -> None:
+        assert _transliterate("\u00feorn", SlugConfig()) == "thorn"
+
+    def test_default_table_eth(self) -> None:
+        assert _transliterate("\u00f0e", SlugConfig()) == "de"
+
+    def test_de_lang_overrides_default(self) -> None:
+        assert _transliterate("Stra\u00dfe", SlugConfig(lang="de")) == "Strasse"
+
 
 class TestApplyReplacementsPost:
     def test_basic(self) -> None:

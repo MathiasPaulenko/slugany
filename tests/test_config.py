@@ -14,7 +14,7 @@ class TestSlugConfig:
         assert c.word_boundary is False
         assert c.stopwords == frozenset()
         assert c.allow_unicode is False
-        assert c.replacements == frozenset()
+        assert c.replacements == ()
         assert c.style is None
         assert c.lang == "auto"
         assert c.fallback == ""
@@ -82,11 +82,16 @@ class TestSlugConfig:
 
     def test_from_kwargs_replacements_dict(self) -> None:
         c = SlugConfig.from_kwargs(replacements={"ll": "2"})
-        assert c.replacements == frozenset({("ll", "2")})
+        assert c.replacements == (("ll", "2"),)
 
     def test_from_kwargs_replacements_iterable(self) -> None:
         c = SlugConfig.from_kwargs(replacements=[("ll", "2"), ("oo", "0")])
-        assert c.replacements == frozenset({("ll", "2"), ("oo", "0")})
+        assert c.replacements == (("ll", "2"), ("oo", "0"))
+
+    def test_from_kwargs_replacements_preserves_order(self) -> None:
+        c = SlugConfig.from_kwargs(replacements=[("a", "b"), ("b", "c")])
+        assert c.replacements == (("a", "b"), ("b", "c"))
+        assert c.replacements[0] == ("a", "b")
 
     def test_from_kwargs_stopwords_list(self) -> None:
         c = SlugConfig.from_kwargs(stopwords=["the", "a"])

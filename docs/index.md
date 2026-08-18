@@ -23,6 +23,6 @@ slugify("Ñandú coração")       # "nandu-coracao"
 
 - **Zero deps** — sin GPL, sin text-unidecode
 - **Multi-idioma** — tablas propias para es, pt, fr, de, it
-- **~200 líneas** — auditable, sin bloat
+- **~550 líneas** — auditable, sin bloat
 - **CLI incluido** — `slugany "texto"` desde terminal
 - **lru_cache** — resultados cacheados automáticamente

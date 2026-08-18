@@ -79,6 +79,18 @@ class TestTrimSeparators:
     def test_empty_separator(self) -> None:
         assert _trim_separators("hello-world", SlugConfig(separator="")) == "hello-world"
 
+    def test_partial_trailing_separator(self) -> None:
+        assert _trim_separators("æu-", SlugConfig(separator="--")) == "æu"
+
+    def test_partial_leading_separator(self) -> None:
+        assert _trim_separators("-æu", SlugConfig(separator="--")) == "æu"
+
+    def test_partial_both_separators(self) -> None:
+        assert _trim_separators("-æu-", SlugConfig(separator="--")) == "æu"
+
+    def test_full_separator_still_works(self) -> None:
+        assert _trim_separators("--hello--world--", SlugConfig(separator="--")) == "hello--world"
+
 
 class TestTruncate:
     def test_no_limit(self) -> None:
@@ -114,6 +126,34 @@ class TestApplyCaseStyle:
     def test_empty_sep(self) -> None:
         cfg = SlugConfig.from_kwargs(style="camel")
         assert _apply_case_style("hello-world", cfg) == "helloWorld"
+
+    def test_trailing_separator_camel(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("hello-", cfg) == "hello"
+
+    def test_trailing_separator_pascal(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="pascal")
+        assert _apply_case_style("hello-", cfg) == "Hello"
+
+    def test_trailing_separator_train(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="train")
+        assert _apply_case_style("hello-", cfg) == "Hello"
+
+    def test_leading_separator_camel(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("-hello", cfg) == "hello"
+
+    def test_empty_text_camel(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("", cfg) == ""
+
+    def test_empty_text_train(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="train")
+        assert _apply_case_style("", cfg) == ""
+
+    def test_only_separator_train(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="train")
+        assert _apply_case_style("-", cfg) == ""
 
 
 class TestApplyFallback:

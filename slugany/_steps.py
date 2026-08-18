@@ -5,7 +5,7 @@ import re
 import unicodedata
 
 from slugany._config import SlugConfig
-from slugany._tables import _CONFUSABLES, _LANGUAGE_TABLES, _PUNCTUATION_TABLE
+from slugany._tables import _CONFUSABLES, _DEFAULT_TABLE, _LANGUAGE_TABLES, _PUNCTUATION_TABLE
 
 
 def _normalize_punctuation(text: str, config: SlugConfig) -> str:
@@ -48,6 +48,7 @@ def _deconfuse(text: str, config: SlugConfig) -> str:
 def _transliterate(text: str, config: SlugConfig) -> str:
     if config.allow_unicode:
         return text
+    text = text.translate(_DEFAULT_TABLE)
     table = _LANGUAGE_TABLES.get(config.lang)
     if table:
         text = text.translate(table)
@@ -92,7 +93,17 @@ def _trim_separators(text: str, config: SlugConfig) -> str:
     if not config.separator:
         return text
     sep = re.escape(config.separator)
-    return re.sub(f"^{sep}+|{sep}+$", "", text)
+    text = re.sub(f"^{sep}+|{sep}+$", "", text)
+    sep_str = config.separator
+    for i in range(len(sep_str) - 1, 0, -1):
+        if text.startswith(sep_str[:i]):
+            text = text[i:]
+            break
+    for i in range(len(sep_str) - 1, 0, -1):
+        if text.endswith(sep_str[-i:]):
+            text = text[:-i]
+            break
+    return text
 
 
 def _truncate(text: str, config: SlugConfig) -> str:
@@ -110,13 +121,15 @@ def _apply_case_style(text: str, config: SlugConfig) -> str:
     if not config.style:
         return text
     sep = config.separator if config.separator else "-"
-    words = text.split(sep)
+    words = [w for w in text.split(sep) if w]
+    if not words:
+        return ""
     if config.style == "camel":
         return words[0].lower() + "".join(w.capitalize() for w in words[1:])
     if config.style == "pascal":
         return "".join(w.capitalize() for w in words)
     if config.style == "train":
-        return "-".join(w.capitalize() for w in words)
+        return config.separator.join(w.capitalize() for w in words)
     return text
 
 

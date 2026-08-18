@@ -33,6 +33,37 @@ def slugify(
     html_entities: Any = _SENTINEL,
     smart_punctuation: Any = _SENTINEL,
 ) -> str:
+    """Convert text into a URL-friendly slug.
+
+    Args:
+        text: The text to slugify. Must be a string.
+        separator: Separator between words. Defaults to ``"-"``.
+        lowercase: Whether to lowercase the output. Defaults to ``True``.
+        max_length: Maximum slug length. ``0`` means no limit.
+        word_boundary: Truncate at the last word boundary within ``max_length``.
+        stopwords: Iterable of words to remove from the output.
+        allow_unicode: Preserve Unicode characters instead of transliterating.
+        replacements: Mapping or iterable of ``(old, new)`` pairs applied pre and post.
+        style: Case style preset (``kebab``, ``snake``, ``camel``,
+            ``pascal``, ``dot``, ``train``, ``filename``, ``url``).
+        lang: Language for transliteration
+            (``auto``, ``es``, ``pt``, ``de``, ``fr``, ``it``).
+        fallback: String to return when the slug would be empty.
+            This value is returned as-is — it should be a valid slug.
+        emoji_mode: How to handle emojis (``strip``, ``text``, ``keep``).
+        css_safe: Prefix with ``s{separator}`` if the slug starts with a digit.
+        html_entities: Decode HTML entities like ``&amp;``.
+        smart_punctuation: Normalize smart quotes, dashes, and zero-width
+            characters.
+
+    Returns:
+        The slugified string.
+
+    Raises:
+        TypeError: If ``text`` is not a string.
+        ValueError: If an invalid ``style``, ``lang``, ``emoji_mode``,
+            or empty ``separator`` is provided.
+    """
     if not isinstance(text, str):
         msg = f"text must be a string, got {type(text).__name__}"
         raise TypeError(msg)
@@ -74,4 +105,13 @@ slugify.cache_clear = _slugify_cached.cache_clear  # type: ignore[attr-defined]
 
 
 def slugify_batch(texts: Iterable[str], **kwargs: Any) -> list[str]:
+    """Slugify multiple texts in a single call.
+
+    Args:
+        texts: Iterable of strings to slugify.
+        **kwargs: Additional keyword arguments passed to :func:`slugify`.
+
+    Returns:
+        A list of slugified strings, one per input text.
+    """
     return [slugify(text, **kwargs) for text in texts]

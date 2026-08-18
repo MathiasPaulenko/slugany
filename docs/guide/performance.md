@@ -22,7 +22,7 @@ Language transliteration uses `str.translate()` with pre-built mapping tables â€
 
 ## Pipeline Architecture
 
-The pipeline consists of 16 pure-function steps executed in order. Short-circuit logic skips remaining steps when text becomes empty (except fallback).
+The pipeline consists of 17 pure-function steps executed in order. Short-circuit logic skips remaining steps when text becomes empty (except fallback).
 
 ## Benchmark
 
