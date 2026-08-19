@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Annotated, Any
 
 try:
-    from pydantic import BeforeValidator  # type: ignore[import-not-found]
+    from pydantic import BeforeValidator
 
     from slugany import slugify
 
