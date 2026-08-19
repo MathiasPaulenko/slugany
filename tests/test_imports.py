@@ -25,7 +25,7 @@ class TestImports:
         assert SlugConfig is not None
 
     def test_version(self) -> None:
-        assert slugany.__version__ == "0.1.0"
+        assert slugany.__version__ == "0.2.0"
 
     def test_all(self) -> None:
         assert "slugify" in slugany.__all__
