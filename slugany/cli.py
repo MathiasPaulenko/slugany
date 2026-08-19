@@ -85,21 +85,25 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     kwargs = _build_kwargs(args)
 
-    if args.batch:
-        for line in sys.stdin:
-            line = line.rstrip("\n")
-            print(slugify(line, **kwargs))
-        return 0
+    try:
+        if args.batch:
+            for line in sys.stdin:
+                line = line.rstrip("\n")
+                print(slugify(line, **kwargs))
+            return 0
 
-    if args.text is not None:
-        print(slugify(args.text, **kwargs))
-        return 0
+        if args.text is not None:
+            print(slugify(args.text, **kwargs))
+            return 0
 
-    if not sys.stdin.isatty():
-        for line in sys.stdin:
-            line = line.rstrip("\n")
-            print(slugify(line, **kwargs))
-        return 0
+        if not sys.stdin.isatty():
+            for line in sys.stdin:
+                line = line.rstrip("\n")
+                print(slugify(line, **kwargs))
+            return 0
+    except (ValueError, TypeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
 
     parser.print_help()
     return 0
