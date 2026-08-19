@@ -87,7 +87,9 @@ class SlugConfig:
             raise TypeError(msg)
 
         max_length = kwargs.get("max_length")
-        if max_length is not None and not isinstance(max_length, int):
+        if max_length is not None and (
+            not isinstance(max_length, int) or isinstance(max_length, bool)
+        ):
             msg = f"max_length must be an integer, got {type(max_length).__name__}."
             raise TypeError(msg)
 
