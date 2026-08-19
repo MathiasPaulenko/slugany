@@ -30,6 +30,8 @@ def is_slug(s: str, separator: str = "-", *, allow_unicode: bool = False) -> boo
         raise TypeError(msg)
     if not s:
         return False
-    sep = re.escape(separator)
     char_class = r"\w" if allow_unicode else r"a-zA-Z0-9"
+    if not separator:
+        return bool(re.match(f"^[{char_class}]+$", s))
+    sep = re.escape(separator)
     return bool(re.match(f"^[{char_class}]+({sep}[{char_class}]+)*$", s))
