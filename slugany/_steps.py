@@ -156,6 +156,8 @@ def _truncate(text: str, config: SlugConfig) -> str:
         return text
     if config.word_boundary and config.separator:
         truncated = text[: config.max_length]
+        if text[config.max_length :].startswith(config.separator):
+            return truncated
         last_sep = truncated.rfind(config.separator)
         if last_sep > 0:
             return truncated[:last_sep]
