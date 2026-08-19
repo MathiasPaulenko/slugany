@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-08-20
+
+### Added
+
+- Language auto-detection: `lang='auto'` detects dominant language from Unicode code-point ranges (es, pt, de, fr, it) and selects the appropriate transliteration table
+- Optional Pydantic `Slug` type: `Annotated[str, BeforeValidator]` that auto-slugifies string values in Pydantic models; falls back to `str` when pydantic is not installed
+- `_LANG_DETECT_RANGES` table in `_tables.py` for language detection
+
+### Fixed
+
+- Pipeline order: `_trim_separators` now runs before `_truncate` to avoid trailing separators after truncation
+- `word_boundary` truncation at exact separator position: returns full truncated text instead of losing a word when the boundary falls exactly at a separator
+- `SlugConfig.from_kwargs` now rejects `bool` for `max_length` (Python `bool` is a subclass of `int`)
+- `is_slug` with empty separator: avoids catastrophic backtracking (ReDoS) by using a simple character-class match
+- CLI now catches `ValueError` and `TypeError` from slugify and prints to stderr with exit code 1 instead of an unhandled traceback
+
 ## [0.1.0] - 2026-08-19
 
 ### Added
