@@ -67,3 +67,25 @@ class TestIsSlug:
     def test_non_string_separator_raises(self) -> None:
         with pytest.raises(TypeError):
             is_slug("hello-world", separator=123)  # type: ignore[arg-type]
+
+    def test_separator_underscore(self) -> None:
+        assert is_slug("hello_world_foo", separator="_") is True
+        assert is_slug("hello-world", separator="_") is False
+
+    def test_separator_dot(self) -> None:
+        assert is_slug("hello.world.foo", separator=".") is True
+        assert is_slug("hello-world", separator=".") is False
+
+    def test_separator_empty_string(self) -> None:
+        assert is_slug("helloworld", separator="") is True
+        assert is_slug("hello world", separator="") is False
+
+    def test_separator_empty_no_redos(self) -> None:
+        """Regression: empty separator must not cause catastrophic backtracking."""
+        import time
+
+        start = time.time()
+        result = is_slug("a" * 100 + "!", separator="")
+        elapsed = time.time() - start
+        assert result is False
+        assert elapsed < 1.0

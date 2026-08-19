@@ -85,6 +85,23 @@ class TestItalian:
         assert slugify("Perch\u00e9", lang="it") == "perche"
 
 
+class TestAutoDetect:
+    def test_auto_detect_spanish(self) -> None:
+        assert slugify("España") == "espana"
+
+    def test_auto_detect_portuguese(self) -> None:
+        assert slugify("Coração") == "coracao"
+
+    def test_auto_detect_german(self) -> None:
+        assert slugify("Übung") == "uebung"
+
+    def test_auto_no_diacritics(self) -> None:
+        assert slugify("Hello World") == "hello-world"
+
+    def test_auto_mixed(self) -> None:
+        assert "espana" in slugify("España und Übung")
+
+
 class TestNFKDFallback:
     def test_greek(self) -> None:
         assert slugify("\u03b1\u03b2\u03b3") == ""

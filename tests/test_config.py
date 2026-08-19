@@ -127,6 +127,13 @@ class TestSlugConfig:
         with pytest.raises(TypeError, match="max_length must be an integer"):
             SlugConfig.from_kwargs(max_length=3.5)  # type: ignore[arg-type]
 
+    def test_from_kwargs_max_length_rejects_bool(self) -> None:
+        """Regression: bool is a subclass of int but must be rejected for max_length."""
+        with pytest.raises(TypeError, match="max_length must be an integer"):
+            SlugConfig.from_kwargs(max_length=True)  # type: ignore[arg-type]
+        with pytest.raises(TypeError, match="max_length must be an integer"):
+            SlugConfig.from_kwargs(max_length=False)  # type: ignore[arg-type]
+
     def test_from_kwargs_invalid_fallback_type(self) -> None:
         with pytest.raises(TypeError, match="fallback must be a string"):
             SlugConfig.from_kwargs(fallback=123)  # type: ignore[arg-type]

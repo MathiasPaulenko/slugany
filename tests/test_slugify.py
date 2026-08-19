@@ -33,6 +33,16 @@ class TestSlugify:
     def test_word_boundary(self) -> None:
         assert slugify("hello-world-foo", max_length=10, word_boundary=True) == "hello"
 
+    def test_word_boundary_exact_boundary(self) -> None:
+        """Regression: word_boundary at exact separator position keeps full word."""
+        assert slugify("hello-world-foo", max_length=11, word_boundary=True) == "hello-world"
+
+    def test_word_boundary_leading_separator(self) -> None:
+        """Regression: leading separators must not eat into max_length budget."""
+        assert slugify("-hello-world", max_length=5, word_boundary=True) == "hello"
+        assert slugify("-hello-world", max_length=11, word_boundary=True) == "hello-world"
+        assert slugify("-hello-", max_length=5, word_boundary=True) == "hello"
+
     def test_stopwords(self) -> None:
         assert slugify("the hello world", stopwords=["the"]) == "hello-world"
 
@@ -460,6 +470,16 @@ class TestSlugify:
         assert slugify("caf\u00e9 hello", stopwords=["caf\u00e9"]) == "hello"
         assert slugify("\u00e4 hello", stopwords=["\u00e4"], lang="de") == "hello"
 
+    def test_stopword_auto_lang_german(self) -> None:
+        """Regression: stopwords with lang='auto' must use auto-detected language table.
+
+        German ä transliterates to 'ae' via the de table, but NFKD alone
+        produces 'a'. The stopword must be normalized with the same table.
+        """
+        assert slugify("\u00e4 hello", stopwords=["\u00e4"]) == "hello"
+        assert slugify("\u00f6 hello", stopwords=["\u00f6"]) == "hello"
+        assert slugify("\u00fc hello", stopwords=["\u00fc"]) == "hello"
+
     def test_css_safe_max_length_idempotent(self) -> None:
         """Regression: css_safe with max_length must be idempotent."""
         r = slugify("123 hello world foo", css_safe=True, max_length=10)
@@ -491,3 +511,40 @@ class TestSlugify:
             )
             == r
         )
+
+
+class TestCaseStyleIntegration:
+    def test_camel(self) -> None:
+        assert slugify("hello world foo", style="camel") == "helloWorldFoo"
+
+    def test_pascal(self) -> None:
+        assert slugify("hello world foo", style="pascal") == "HelloWorldFoo"
+
+    def test_train(self) -> None:
+        assert slugify("hello world foo", style="train") == "Hello-World-Foo"
+
+    def test_dot(self) -> None:
+        assert slugify("hello world foo", style="dot") == "hello.world.foo"
+
+    def test_snake(self) -> None:
+        assert slugify("hello world foo", style="snake") == "hello_world_foo"
+
+    def test_kebab(self) -> None:
+        assert slugify("hello world foo", style="kebab") == "hello-world-foo"
+
+    def test_filename(self) -> None:
+        assert slugify("Hello World Foo", style="filename") == "Hello-World-Foo"
+
+    def test_camel_with_unicode(self) -> None:
+        assert slugify("España und Übung", style="camel") == "espanaUndUbung"
+
+    def test_css_safe_with_styles(self) -> None:
+        """css_safe prefix must adapt to each style preset's separator and case."""
+        assert slugify("123 hello", css_safe=True, style="dot") == "s.123.hello"
+        assert slugify("123 hello", css_safe=True, style="snake") == "s_123_hello"
+        assert slugify("123 hello", css_safe=True, style="kebab") == "s-123-hello"
+        assert slugify("123 Hello", css_safe=True, style="filename") == "s-123-Hello"
+        assert slugify("123 hello", css_safe=True, style="url") == "s-123-hello"
+        assert slugify("123 hello", css_safe=True, style="camel") == "s123Hello"
+        assert slugify("123 hello", css_safe=True, style="pascal") == "S123Hello"
+        assert slugify("123 hello", css_safe=True, style="train") == "S-123-Hello"

@@ -43,6 +43,11 @@ class TestRemoveStopwords:
         cfg = SlugConfig(stopwords=frozenset({"hello_world"}))
         assert _remove_stopwords("hello_world foo", cfg) == "foo"
 
+    def test_stopword_auto_lang_german(self) -> None:
+        """Regression: lang='auto' must detect language for stopword normalization."""
+        cfg = SlugConfig.from_kwargs(stopwords=["\u00e4"], lang="auto")
+        assert _remove_stopwords("ae hello", cfg) == "hello"
+
 
 class TestReplaceNonAlphanumeric:
     def test_basic(self) -> None:
@@ -116,6 +121,16 @@ class TestTruncate:
     def test_word_boundary(self) -> None:
         cfg = SlugConfig(max_length=10, word_boundary=True)
         assert _truncate("hello-world-foo", cfg) == "hello"
+
+    def test_word_boundary_exact(self) -> None:
+        """Regression: word_boundary at exact separator position returns full truncated text."""
+        cfg = SlugConfig(max_length=11, word_boundary=True)
+        assert _truncate("hello-world-foo", cfg) == "hello-world"
+
+    def test_word_boundary_multi_char_exact(self) -> None:
+        """Regression: word_boundary with multi-char separator at exact boundary."""
+        cfg = SlugConfig(separator="--", max_length=12, word_boundary=True)
+        assert _truncate("hello--world--foo", cfg) == "hello--world"
 
 
 class TestApplyCaseStyle:
@@ -196,6 +211,27 @@ class TestApplyCaseStyle:
         from slugany._steps import _split_case_boundaries
 
         assert _split_case_boundaries("") == []
+
+
+class TestCaseStyles:
+    def test_camel(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("hello-world", cfg) == "helloWorld"
+
+    def test_pascal(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="pascal")
+        assert _apply_case_style("hello-world", cfg) == "HelloWorld"
+
+    def test_train(self) -> None:
+        cfg = SlugConfig.from_kwargs(style="train")
+        assert _apply_case_style("hello-world", cfg) == "Hello-World"
+
+    def test_no_style(self) -> None:
+        assert _apply_case_style("hello-world", SlugConfig()) == "hello-world"
+
+    def test_empty_separator(self) -> None:
+        cfg = SlugConfig(style="camel", separator="")
+        assert _apply_case_style("helloworld", cfg) == "helloworld"
 
 
 class TestApplyFallback:

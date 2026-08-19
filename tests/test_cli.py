@@ -5,6 +5,8 @@ import sys
 from io import StringIO
 from unittest.mock import patch
 
+import pytest
+
 from slugany.cli import _build_kwargs, _build_parser, main
 
 
@@ -129,6 +131,31 @@ class TestCLIDirect:
         ):
             assert main([]) == 0
         assert "usage" in out.getvalue().lower()
+
+    def test_main_invalid_style_returns_error(self) -> None:
+        """Regression: CLI should show clean error for invalid style, not traceback."""
+        with (
+            patch("sys.stderr", new=StringIO()) as err,
+            patch("sys.stdout", new=StringIO()),
+        ):
+            assert main(["hello", "--style", "invalid"]) == 1
+        assert "error:" in err.getvalue()
+        assert "Invalid style" in err.getvalue()
+
+    def test_main_invalid_lang_returns_error(self) -> None:
+        """Regression: CLI should show clean error for invalid lang."""
+        with (
+            patch("sys.stderr", new=StringIO()) as err,
+            patch("sys.stdout", new=StringIO()),
+        ):
+            assert main(["hello", "--lang", "xx"]) == 1
+        assert "error:" in err.getvalue()
+
+    def test_main_invalid_emoji_mode_returns_error(self) -> None:
+        """Regression: CLI argparse rejects invalid emoji_mode with exit code 2."""
+        with pytest.raises(SystemExit) as exc_info:
+            main(["hello", "--emoji-mode", "invalid"])
+        assert exc_info.value.code == 2
 
     def test_main_stdin_isatty_false_empty(self) -> None:
         with (

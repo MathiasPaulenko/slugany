@@ -44,3 +44,20 @@ class TestSlugifyBatch:
             lowercase=False,
             style="pascal",
         ) == ["HelloWorld", "FooBar"]
+
+    def test_batch_generator(self) -> None:
+        from collections.abc import Iterator
+
+        def gen() -> Iterator[str]:
+            yield "Hello World"
+            yield "Foo Bar"
+
+        assert slugify_batch(gen()) == ["hello-world", "foo-bar"]
+
+    def test_batch_large(self) -> None:
+        items = [f"Item {i} Test" for i in range(100)]
+        expected = [f"item-{i}-test" for i in range(100)]
+        assert slugify_batch(items) == expected
+
+    def test_batch_iterator(self) -> None:
+        assert slugify_batch(iter(["Hello", "World"])) == ["hello", "world"]
