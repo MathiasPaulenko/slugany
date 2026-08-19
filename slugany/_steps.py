@@ -54,9 +54,13 @@ def _transliterate(text: str, config: SlugConfig) -> str:
     if config.allow_unicode:
         return text
 
+    lang = config.lang
+    if lang == "auto":
+        lang = _detect_language(text) or ""
+
     def _transliterate_segment(segment: str) -> str:
         segment = segment.translate(_DEFAULT_TABLE)
-        table = _LANGUAGE_TABLES.get(config.lang)
+        table = _LANGUAGE_TABLES.get(lang)
         if table:
             segment = segment.translate(table)
         segment = unicodedata.normalize("NFKD", segment)
@@ -96,7 +100,10 @@ def _remove_stopwords(text: str, config: SlugConfig) -> str:
         if not config.allow_unicode:
             sw = sw.translate(_CONFUSABLES)
             sw = sw.translate(_DEFAULT_TABLE)
-            table = _LANGUAGE_TABLES.get(config.lang)
+            lang = config.lang
+            if lang == "auto":
+                lang = _detect_language(sw) or ""
+            table = _LANGUAGE_TABLES.get(lang)
             if table:
                 sw = sw.translate(table)
             sw = unicodedata.normalize("NFKD", sw).encode("ascii", "ignore").decode("ascii")
@@ -201,6 +208,19 @@ def _apply_case_style(text: str, config: SlugConfig) -> str:
     if config.style == "train":
         return config.separator.join(w[0].upper() + w[1:] for w in words)
     return text
+
+
+def _detect_language(text: str) -> str | None:
+    from slugany._tables import _LANG_DETECT_RANGES
+
+    counts: dict[str, int] = {}
+    for lang, ranges in _LANG_DETECT_RANGES.items():
+        count = sum(1 for c in text if any(lo <= ord(c) <= hi for lo, hi in ranges))
+        if count > 0:
+            counts[lang] = count
+    if not counts:
+        return None
+    return max(counts, key=lambda k: counts[k])
 
 
 def _apply_fallback(text: str, config: SlugConfig) -> str:
