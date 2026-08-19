@@ -36,3 +36,11 @@ class TestSlugifyBatch:
     def test_type_error_on_non_string(self) -> None:
         with pytest.raises(TypeError):
             slugify_batch([123])  # type: ignore[list-item]
+
+    def test_explicit_kwargs(self) -> None:
+        assert slugify_batch(
+            ["Hello World", "Foo Bar"],
+            separator="_",
+            lowercase=False,
+            style="pascal",
+        ) == ["HelloWorld", "FooBar"]

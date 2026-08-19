@@ -1,5 +1,6 @@
 site_name: slugany
-site_description: Slugify multi-idioma, zero deps. Alternativa simple a python-slugify sin GPL.
+site_description: Multi-language slugify with zero dependencies. A simple, MIT-licensed alternative to python-slugify.
+site_author: Mathias Paulenko
 site_url: https://mathiaspaulenko.github.io/slugany/
 repo_url: https://github.com/MathiasPaulenko/slugany
 repo_name: MathiasPaulenko/slugany
@@ -48,7 +49,7 @@ nav:
       - slugify_batch(): api/slugify_batch.md
       - is_slug(): api/is_slug.md
       - SlugConfig: api/slugconfig.md
-  - Changelog: changelog.md
+  - Changelog: CHANGELOG.md
 
 plugins:
   - search

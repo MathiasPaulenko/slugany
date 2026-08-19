@@ -26,5 +26,5 @@ slugify("hello world", style="camel")    # "helloWorld"
 slugify("hello world", style="pascal")   # "HelloWorld"
 slugify("hello world", style="dot")      # "hello.world"
 slugify("hello world", style="train")    # "Hello-World"
-slugify("hello world", style="filename") # "Hello-World"
+slugify("Hello World", style="filename") # "Hello-World"
 ```

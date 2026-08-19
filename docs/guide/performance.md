@@ -22,7 +22,7 @@ Language transliteration uses `str.translate()` with pre-built mapping tables �
 
 ## Pipeline Architecture
 
-The pipeline consists of 17 pure-function steps executed in order. Short-circuit logic skips remaining steps when text becomes empty (except fallback).
+The pipeline consists of 16 pure-function steps executed in order. Short-circuit logic skips remaining steps when text becomes empty (except fallback).
 
 ## Benchmark
 
@@ -30,5 +30,5 @@ The pipeline consists of 17 pure-function steps executed in order. Short-circuit
 import timeit
 
 timeit.timeit(lambda: slugify("¡Hola Mundo! Café résumé"), number=10000)
-# ~0.5s for 10k calls (first call), ~0.01s with cache
+# ~0.6s for 10k calls (no cache), ~0.1s with cache
 ```

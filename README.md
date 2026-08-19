@@ -6,24 +6,27 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/MathiasPaulenko/slugany)
 
-Slugify multi-idioma, zero dependencias. Alternativa simple a `python-slugify` sin arrastrar dependencias GPL.
+Multi-language slugify with zero dependencies. A simple, MIT-licensed alternative to `python-slugify`.
 
 ## Features
 
-- **Zero deps** — sin GPL, sin text-unidecode, sin UnicodeData más allá de la stdlib
-- **Multi-idioma** — tablas propias para español, portugués, alemán, francés e italiano
-- **Smart punctuation** — normaliza curly quotes, em-dash, NBSP, zero-width, bullets
+- **Zero deps** — no GPL, no text-unidecode, no UnicodeData beyond the stdlib
+- **Multi-language** — built-in tables for Spanish, Portuguese, German, French, and Italian
+- **Smart punctuation** — normalizes curly quotes, em-dashes, NBSP, zero-width characters, bullets
 - **Case styles** — kebab, snake, camel, pascal, dot, train, filename
-- **CLI incluido** — `slugany "texto"` desde terminal con auto-stdin
-- **lru_cache** — resultados cacheados automáticamente (maxsize=512)
-- **Idempotente** — `slugify(slugify(x)) == slugify(x)` garantizado
-- **~550 líneas core** — auditable, sin bloat
+- **CLI included** — `slugany "text"` from the terminal with auto-stdin
+- **lru_cache** — results cached automatically (maxsize=512)
+- **Idempotent** — `slugify(slugify(x)) == slugify(x)` guaranteed
+- **Fully typed** — type hints on every public API, `py.typed` marker included
+- **~550 lines core** — auditable, no bloat
 
-## Install
+## Installation
 
 ```bash
 pip install slugany
 ```
+
+Requires Python 3.11 or later. No runtime dependencies.
 
 ## Quickstart
 
@@ -49,7 +52,7 @@ slugany "hello world" --style camel
 # helloWorld
 
 slugany "hello-world-foo" --max-length 10 --word-boundary
-# hello
+# hello-world
 ```
 
 ## Styles
@@ -61,7 +64,7 @@ slugify("hello world", style="camel")    # "helloWorld"
 slugify("hello world", style="pascal")   # "HelloWorld"
 slugify("hello world", style="dot")      # "hello.world"
 slugify("hello world", style="train")    # "Hello-World"
-slugify("hello world", style="filename") # "Hello-World"
+slugify("Hello World", style="filename") # "Hello-World"
 ```
 
 ## Languages
@@ -74,9 +77,42 @@ slugify("Cœur", lang="fr")               # "coeur"
 slugify("Caffè", lang="it")              # "caffe"
 ```
 
+## Advanced
+
+```python
+# Stopwords
+slugify("the quick brown fox", stopwords=["the", "fox"])  # "quick-brown"
+
+# Custom replacements
+slugify("hello world", replacements={"hello": "hi"})  # "hi-world"
+
+# Emoji handling
+slugify("Hello \U0001f389 World", emoji_mode="strip")  # "hello-world"
+slugify("Hello \U0001f389 World", emoji_mode="keep")   # "hello-world"
+
+# CSS-safe (prefix digit-leading slugs)
+slugify("123 main st", css_safe=True)  # "s-123-main-st"
+
+# Fallback for empty results
+slugify("!!!", fallback="untitled")  # "untitled"
+
+# Unicode preservation
+slugify("\u00d1and\u00fa", allow_unicode=True)  # "\u00f1and\u00fa"
+
+# Batch processing
+from slugany import slugify_batch
+slugify_batch(["Hello World", "Caf\u00e9 R\u00e9sum\u00e9"])  # ["hello-world", "cafe-resume"]
+
+# Validation
+from slugany import is_slug
+is_slug("hello-world")   # True
+is_slug("hello world")   # False
+is_slug("hello_world", separator="_")  # True
+```
+
 ## Migration from python-slugify
 
-slugany is a drop-in replacement with keyword-only arguments:
+slugany is designed as a drop-in replacement with keyword-only arguments:
 
 ```python
 # python-slugify
@@ -88,6 +124,8 @@ from slugany import slugify
 slugify("Hello World", separator="_")
 ```
 
+See the [migration guide](https://mathiaspaulenko.github.io/slugany/guide/migration/) for full details.
+
 ## Why slugany?
 
 | Aspect | python-slugify | slugany |
@@ -97,6 +135,23 @@ slugify("Hello World", separator="_")
 | Multi-language | Limited | Built-in tables (es, pt, de, fr, it) |
 | Caching | No | `lru_cache` built-in |
 | Core size | ~1000+ lines | ~550 lines |
+
+## Documentation
+
+Full documentation is available at [mathiaspaulenko.github.io/slugany](https://mathiaspaulenko.github.io/slugany/).
+
+- [Basic usage](https://mathiaspaulenko.github.io/slugany/usage/basic/)
+- [Styles & presets](https://mathiaspaulenko.github.io/slugany/usage/styles/)
+- [Languages](https://mathiaspaulenko.github.io/slugany/usage/languages/)
+- [CLI reference](https://mathiaspaulenko.github.io/slugany/usage/cli/)
+- [API reference](https://mathiaspaulenko.github.io/slugany/api/slugify/)
+- [Contracts & guarantees](https://mathiaspaulenko.github.io/slugany/guide/contracts/)
+
+## Contributing
+
+Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+Please read our [Code of Conduct](CODE_OF_CONDUCT.md) before participating in the community.
 
 ## License
 

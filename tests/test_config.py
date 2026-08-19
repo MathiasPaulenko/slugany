@@ -58,10 +58,34 @@ class TestSlugConfig:
         assert c.separator == "_"
         assert c.lowercase is True
 
+    def test_from_kwargs_style_explicit_separator_overrides_preset(self) -> None:
+        """Explicitly passing separator='-' with style='snake' overrides preset."""
+        c = SlugConfig.from_kwargs(style="snake", separator="-")
+        assert c.separator == "-"
+        assert c.lowercase is True
+
+    def test_from_kwargs_style_no_separator_uses_preset(self) -> None:
+        """Not passing separator with style='snake' uses preset separator."""
+        c = SlugConfig.from_kwargs(style="snake")
+        assert c.separator == "_"
+        assert c.lowercase is True
+
+    def test_from_kwargs_style_explicit_lowercase_overrides_preset(self) -> None:
+        """Explicitly passing lowercase=False with style='filename' overrides preset."""
+        c = SlugConfig.from_kwargs(style="filename", lowercase=True)
+        assert c.separator == "-"
+        assert c.lowercase is True
+
+    def test_from_kwargs_style_both_override_preset(self) -> None:
+        """Explicitly passing both separator and lowercase overrides preset."""
+        c = SlugConfig.from_kwargs(style="snake", separator="-", lowercase=False)
+        assert c.separator == "-"
+        assert c.lowercase is False
+
     def test_from_kwargs_style_camel(self) -> None:
         c = SlugConfig.from_kwargs(style="camel")
         assert c.separator == "-"
-        assert c.lowercase is True
+        assert c.lowercase is False
         assert c.style == "camel"
 
     def test_from_kwargs_invalid_style(self) -> None:
@@ -96,3 +120,25 @@ class TestSlugConfig:
     def test_from_kwargs_stopwords_list(self) -> None:
         c = SlugConfig.from_kwargs(stopwords=["the", "a"])
         assert c.stopwords == frozenset({"the", "a"})
+
+    def test_from_kwargs_invalid_max_length_type(self) -> None:
+        with pytest.raises(TypeError, match="max_length must be an integer"):
+            SlugConfig.from_kwargs(max_length="10")  # type: ignore[arg-type]
+        with pytest.raises(TypeError, match="max_length must be an integer"):
+            SlugConfig.from_kwargs(max_length=3.5)  # type: ignore[arg-type]
+
+    def test_from_kwargs_invalid_fallback_type(self) -> None:
+        with pytest.raises(TypeError, match="fallback must be a string"):
+            SlugConfig.from_kwargs(fallback=123)  # type: ignore[arg-type]
+
+    def test_from_kwargs_invalid_bool_types(self) -> None:
+        for field in (
+            "lowercase",
+            "word_boundary",
+            "allow_unicode",
+            "css_safe",
+            "html_entities",
+            "smart_punctuation",
+        ):
+            with pytest.raises(TypeError, match=f"{field} must be a boolean"):
+                SlugConfig.from_kwargs(**{field: "yes"})  # type: ignore[arg-type]

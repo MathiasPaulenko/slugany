@@ -80,3 +80,8 @@ class TestPipeline:
 
     def test_short_circuit_no_fallback(self) -> None:
         assert _run_pipeline("!!!", SlugConfig()) == ""
+
+    def test_post_replacement_after_lowercase(self) -> None:
+        """Regression: post-replacements must run after lowercase."""
+        cfg = SlugConfig.from_kwargs(replacements={"hello": "X"})
+        assert _run_pipeline("HELLO", cfg) == "X"

@@ -1,13 +1,15 @@
 # slugany
 
-Slugify multi-idioma, zero dependencias. Alternativa simple a `python-slugify`
-sin arrastrar dependencias GPL.
+Multi-language slugify with zero dependencies. A simple, MIT-licensed alternative
+to `python-slugify` without GPL dependencies.
 
-## Instalación
+## Installation
 
 ```bash
 pip install slugany
 ```
+
+Requires Python 3.11 or later. No runtime dependencies.
 
 ## Quickstart
 
@@ -17,12 +19,27 @@ from slugany import slugify
 slugify("¡Hola Mundo!")        # "hola-mundo"
 slugify("Café résumé naïve")   # "cafe-resume-naive"
 slugify("Ñandú coração")       # "nandu-coracao"
+slugify("Über Straße", lang="de")  # "ueber-strasse"
 ```
 
-## Por qué slugany
+## Features
 
-- **Zero deps** — sin GPL, sin text-unidecode
-- **Multi-idioma** — tablas propias para es, pt, fr, de, it
-- **~550 líneas** — auditable, sin bloat
-- **CLI incluido** — `slugany "texto"` desde terminal
-- **lru_cache** — resultados cacheados automáticamente
+- **Zero deps** — no GPL, no text-unidecode, no UnicodeData beyond the stdlib
+- **Multi-language** — built-in tables for Spanish, Portuguese, German, French, and Italian
+- **Smart punctuation** — normalizes curly quotes, em-dashes, NBSP, zero-width characters, bullets
+- **Case styles** — kebab, snake, camel, pascal, dot, train, filename
+- **CLI included** — `slugany "text"` from the terminal with auto-stdin
+- **lru_cache** — results cached automatically (maxsize=512)
+- **Idempotent** — `slugify(slugify(x)) == slugify(x)` guaranteed
+- **Fully typed** — type hints on every public API, `py.typed` marker included
+- **~550 lines core** — auditable, no bloat
+
+## Next steps
+
+- [Basic usage](usage/basic.md)
+- [Styles & presets](usage/styles.md)
+- [Languages](usage/languages.md)
+- [CLI reference](usage/cli.md)
+- [API reference](api/slugify.md)
+- [Migration from python-slugify](guide/migration.md)
+- [Contracts & guarantees](guide/contracts.md)

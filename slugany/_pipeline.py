@@ -29,16 +29,18 @@ _STEPS: list[Callable[[str, SlugConfig], str]] = [
     _handle_emoji,
     _deconfuse,
     _transliterate,
-    _apply_replacements_post,
     _lowercase,
+    _apply_replacements_post,
     _remove_stopwords,
     _replace_non_alphanumeric,
     _collapse_separators,
     _truncate,
     _trim_separators,
-    _apply_case_style,
     _apply_fallback,
     _apply_css_safe,
+    _apply_case_style,
+    _truncate,
+    _trim_separators,
 ]
 
 

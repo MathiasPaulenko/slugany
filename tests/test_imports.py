@@ -32,3 +32,4 @@ class TestImports:
         assert "slugify_batch" in slugany.__all__
         assert "is_slug" in slugany.__all__
         assert "SlugConfig" in slugany.__all__
+        assert "__version__" in slugany.__all__

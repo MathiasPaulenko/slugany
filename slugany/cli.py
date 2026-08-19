@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from typing import Any
 
 from slugany import slugify
 
@@ -54,8 +55,8 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _build_kwargs(args: argparse.Namespace) -> dict[str, object]:
-    kwargs: dict[str, object] = {}
+def _build_kwargs(args: argparse.Namespace) -> dict[str, Any]:
+    kwargs: dict[str, Any] = {}
     if args.separator is not None:
         kwargs["separator"] = args.separator
     if args.style is not None:
@@ -87,17 +88,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.batch:
         for line in sys.stdin:
             line = line.rstrip("\n")
-            print(slugify(line, **kwargs))  # type: ignore[arg-type]
+            print(slugify(line, **kwargs))
         return 0
 
     if args.text is not None:
-        print(slugify(args.text, **kwargs))  # type: ignore[arg-type]
+        print(slugify(args.text, **kwargs))
         return 0
 
     if not sys.stdin.isatty():
         for line in sys.stdin:
             line = line.rstrip("\n")
-            print(slugify(line, **kwargs))  # type: ignore[arg-type]
+            print(slugify(line, **kwargs))
         return 0
 
     parser.print_help()

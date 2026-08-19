@@ -18,7 +18,16 @@ def is_slug(s: str, separator: str = "-", *, allow_unicode: bool = False) -> boo
 
     Returns:
         ``True`` if the string is a valid slug, ``False`` otherwise.
+
+    Raises:
+        TypeError: If ``s`` or ``separator`` is not a string.
     """
+    if not isinstance(s, str):
+        msg = f"s must be a string, got {type(s).__name__}"
+        raise TypeError(msg)
+    if not isinstance(separator, str):
+        msg = f"separator must be a string, got {type(separator).__name__}"
+        raise TypeError(msg)
     if not s:
         return False
     sep = re.escape(separator)

@@ -3,6 +3,7 @@ from __future__ import annotations
 from slugany._config import SlugConfig
 from slugany._steps import (
     _apply_case_style,
+    _apply_css_safe,
     _apply_fallback,
     _collapse_separators,
     _remove_stopwords,
@@ -31,6 +32,16 @@ class TestRemoveStopwords:
     def test_no_match(self) -> None:
         cfg = SlugConfig(stopwords=frozenset({"xyz"}))
         assert _remove_stopwords("hello world", cfg) == "hello world"
+
+    def test_stopword_with_non_alphanumeric(self) -> None:
+        """Regression: stopwords containing non-alphanumeric chars must match."""
+        cfg = SlugConfig(stopwords=frozenset({"hello-world"}))
+        assert _remove_stopwords("hello-world foo", cfg) == "foo"
+
+    def test_stopword_with_underscore(self) -> None:
+        """Regression: stopwords with underscores must match after normalization."""
+        cfg = SlugConfig(stopwords=frozenset({"hello_world"}))
+        assert _remove_stopwords("hello_world foo", cfg) == "foo"
 
 
 class TestReplaceNonAlphanumeric:
@@ -155,6 +166,37 @@ class TestApplyCaseStyle:
         cfg = SlugConfig.from_kwargs(style="train")
         assert _apply_case_style("-", cfg) == ""
 
+    def test_camel_case_boundary_split(self) -> None:
+        """Regression: case-boundary splitting for camelCase input without separators."""
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("helloWorld", cfg) == "helloWorld"
+
+    def test_pascal_case_boundary_split(self) -> None:
+        """Regression: case-boundary splitting for PascalCase input without separators."""
+        cfg = SlugConfig.from_kwargs(style="pascal")
+        assert _apply_case_style("HelloWorld", cfg) == "HelloWorld"
+
+    def test_train_case_boundary_split(self) -> None:
+        """Regression: case-boundary splitting for train style input without separators."""
+        cfg = SlugConfig.from_kwargs(style="train")
+        assert _apply_case_style("helloWorld", cfg) == "Hello-World"
+
+    def test_camel_case_boundary_with_digits(self) -> None:
+        """Regression: case-boundary splitting with digits."""
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("hello123World", cfg) == "hello123World"
+
+    def test_camel_upper_upper_lower_split(self) -> None:
+        """Cover Upper->Upper+lower boundary: 'ABCdef' -> 'AB', 'Cdef'."""
+        cfg = SlugConfig.from_kwargs(style="camel")
+        assert _apply_case_style("ABCdef", cfg) == "abCdef"
+
+    def test_split_case_boundaries_empty(self) -> None:
+        """Cover empty word edge case in _split_case_boundaries."""
+        from slugany._steps import _split_case_boundaries
+
+        assert _split_case_boundaries("") == []
+
 
 class TestApplyFallback:
     def test_empty(self) -> None:
@@ -165,3 +207,34 @@ class TestApplyFallback:
 
     def test_no_fallback(self) -> None:
         assert _apply_fallback("", SlugConfig()) == ""
+
+
+class TestApplyCssSafe:
+    def test_not_css_safe(self) -> None:
+        assert _apply_css_safe("123hello", SlugConfig()) == "123hello"
+
+    def test_starts_with_letter(self) -> None:
+        cfg = SlugConfig(css_safe=True)
+        assert _apply_css_safe("hello", cfg) == "hello"
+
+    def test_empty(self) -> None:
+        assert _apply_css_safe("", SlugConfig(css_safe=True)) == ""
+
+    def test_default_style(self) -> None:
+        cfg = SlugConfig(css_safe=True)
+        assert _apply_css_safe("123hello", cfg) == "s-123hello"
+
+    def test_camel_style(self) -> None:
+        """Regression: css_safe with camel prepends 's' without separator."""
+        cfg = SlugConfig.from_kwargs(css_safe=True, style="camel")
+        assert _apply_css_safe("123Hello", cfg) == "s123Hello"
+
+    def test_pascal_style(self) -> None:
+        """Regression: css_safe with pascal prepends 'S' without separator."""
+        cfg = SlugConfig.from_kwargs(css_safe=True, style="pascal")
+        assert _apply_css_safe("123Hello", cfg) == "S123Hello"
+
+    def test_train_style(self) -> None:
+        """Regression: css_safe with train prepends 'S' with separator."""
+        cfg = SlugConfig.from_kwargs(css_safe=True, style="train")
+        assert _apply_css_safe("123-Hello", cfg) == "S-123-Hello"

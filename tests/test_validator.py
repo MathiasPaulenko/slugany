@@ -63,3 +63,7 @@ class TestIsSlug:
     def test_non_string_input_raises(self) -> None:
         with pytest.raises(TypeError):
             is_slug(123)  # type: ignore[arg-type]
+
+    def test_non_string_separator_raises(self) -> None:
+        with pytest.raises(TypeError):
+            is_slug("hello-world", separator=123)  # type: ignore[arg-type]

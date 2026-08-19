@@ -5,14 +5,15 @@ build-backend = "hatchling.build"
 [project]
 name = "slugany"
 version = "0.1.0"
-description = "Slugify multi-idioma, zero deps. Alternativa simple a python-slugify sin GPL."
+description = "Multi-language slugify with zero dependencies. A simple, MIT-licensed alternative to python-slugify."
 readme = "README.md"
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 authors = [{ name = "Mathias Paulenko", email = "mathias.paulenko@outlook.com" }]
 keywords = ["slugify", "slug", "unicode", "transliterate", "seo", "url", "multi-language"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
@@ -25,6 +26,7 @@ classifiers = [
 
 [project.urls]
 Homepage = "https://github.com/MathiasPaulenko/slugany"
+Documentation = "https://mathiaspaulenko.github.io/slugany/"
 Repository = "https://github.com/MathiasPaulenko/slugany"
 "Bug Tracker" = "https://github.com/MathiasPaulenko/slugany/issues"
 Changelog = "https://github.com/MathiasPaulenko/slugany/blob/main/CHANGELOG.md"

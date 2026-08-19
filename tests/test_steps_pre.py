@@ -48,16 +48,23 @@ class TestHtmlEntitiesDecode:
 
 
 class TestApplyReplacementsPre:
-    def test_basic(self) -> None:
+    def test_basic_non_ascii(self) -> None:
+        """Pre-replacements only apply to non-ASCII keys."""
+        cfg = SlugConfig.from_kwargs(replacements={"\u00c6": "AE"})
+        assert _apply_replacements_pre("\u00c6lfred", cfg) == "AElfred"
+
+    def test_ascii_key_skipped(self) -> None:
+        """ASCII keys are not applied in pre-replacements."""
         cfg = SlugConfig.from_kwargs(replacements={"ll": "2"})
-        assert _apply_replacements_pre("Hello", cfg) == "He2o"
+        assert _apply_replacements_pre("Hello", cfg) == "Hello"
 
     def test_empty(self) -> None:
         assert _apply_replacements_pre("Hello", SlugConfig()) == "Hello"
 
-    def test_multiple(self) -> None:
-        cfg = SlugConfig.from_kwargs(replacements={"ab": "x", "lo": "y"})
-        assert _apply_replacements_pre("ablo", cfg) == "xy"
+    def test_multiple_non_ascii(self) -> None:
+        """Multiple non-ASCII pre-replacements are applied in order."""
+        cfg = SlugConfig.from_kwargs(replacements={"\u00c6": "AE", "\u00df": "ss"})
+        assert _apply_replacements_pre("\u00c6\u00df", cfg) == "AEss"
 
 
 class TestHandleEmoji:
@@ -87,6 +94,10 @@ class TestDeconfuse:
 
     def test_no_confusables(self) -> None:
         assert _deconfuse("cafe", SlugConfig()) == "cafe"
+
+    def test_skip_with_allow_unicode(self) -> None:
+        """Regression: deconfuse must not convert Cyrillic when allow_unicode=True."""
+        assert _deconfuse("\u0441afe", SlugConfig(allow_unicode=True)) == "\u0441afe"
 
 
 class TestTransliterate:
@@ -123,6 +134,21 @@ class TestTransliterate:
     def test_de_lang_overrides_default(self) -> None:
         assert _transliterate("Stra\u00dfe", SlugConfig(lang="de")) == "Strasse"
 
+    def test_emoji_keep_preserves_emoji(self) -> None:
+        """Regression: transliterate must preserve emoji when emoji_mode='keep'."""
+        cfg = SlugConfig(emoji_mode="keep")
+        assert _transliterate("Hello\U0001f389World", cfg) == "Hello\U0001f389World"
+
+    def test_emoji_text_preserves_emoji(self) -> None:
+        """Regression: transliterate must preserve emoji when emoji_mode='text'."""
+        cfg = SlugConfig(emoji_mode="text")
+        assert _transliterate("Hello\U0001f389World", cfg) == "Hello\U0001f389World"
+
+    def test_emoji_strip_removes_emoji(self) -> None:
+        """emoji_mode='strip' removes emoji before transliterate (via _handle_emoji)."""
+        cfg = SlugConfig(emoji_mode="strip")
+        assert _transliterate("Hello  World", cfg) == "Hello  World"
+
 
 class TestApplyReplacementsPost:
     def test_basic(self) -> None:
@@ -131,6 +157,11 @@ class TestApplyReplacementsPost:
 
     def test_empty(self) -> None:
         assert _apply_replacements_post("hello", SlugConfig()) == "hello"
+
+    def test_non_ascii_key_skipped(self) -> None:
+        """Post-replacements only apply to ASCII keys."""
+        cfg = SlugConfig.from_kwargs(replacements={"\u00c6": "AE"})
+        assert _apply_replacements_post("\u00c6lfred", cfg) == "\u00c6lfred"
 
 
 class TestLowercase:
