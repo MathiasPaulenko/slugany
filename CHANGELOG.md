@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-08-20
+
+### Fixed
+
+- CLI stdio UTF-8 reconfiguration now uses `getattr` to satisfy mypy and `contextlib.suppress` to keep ruff happy.
+- Wrapped the long test list in `test_mixed_case_idempotency_all_styles` to respect the 100-character line length.
+
 ## [1.0.0] - 2026-08-20
 
 ### Added
