@@ -5,28 +5,35 @@
 [![Python](https://img.shields.io/pypi/pyversions/slugany.svg)](https://pypi.org/project/slugany/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/MathiasPaulenko/slugany)
-[![Tests](https://img.shields.io/badge/tests-381%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-478%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
 [![mypy](https://img.shields.io/badge/mypy-strict%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 [![ruff](https://img.shields.io/badge/ruff-clean%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 
 A multi-language slugify library with zero runtime dependencies. MIT-licensed, fully typed, and audited for idempotency — a clean alternative to `python-slugify` with no GPL baggage.
 
-> **381 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 13,800+ randomized idempotency checks passed**
+> **478 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 13,800+ randomized idempotency checks passed**
 
 ## Why slugany?
 
 `python-slugify` is the de facto standard, but it drags in `text-unidecode` (GPL) and over 1,000 lines of code. `slugany` was built from scratch to be:
 
-| | python-slugify | slugany |
-| --- | --- | --- |
-| **Runtime deps** | `text-unidecode` (GPL) | **Zero** |
-| **License** | GPL | **MIT** |
-| **Languages** | Limited | **Built-in: es, pt, de, fr, it** |
-| **Caching** | No | **`lru_cache` built-in (512)** |
-| **Typing** | Partial | **Fully typed, `py.typed` marker** |
-| **Core size** | ~1,000+ lines | **~550 lines** |
-| **Idempotency** | Not guaranteed | **Guaranteed & tested** |
-| **CLI** | Separate package | **Built-in** |
+| | python-slugify | unicode-slugify | slugany |
+| --- | --- | --- | --- |
+| **Runtime deps** | `text-unidecode` (GPL) | `unidecode` (GPL) | **Zero** |
+| **License** | GPL | GPL | **MIT** |
+| **Languages** | Limited | Limited | **Built-in: es, pt, de, fr, it** |
+| **Caching** | No | No | **`lru_cache` built-in (512)** |
+| **Typing** | Partial | Partial | **Fully typed, `py.typed` marker** |
+| **Core size** | ~1,000+ lines | ~800 lines | **~550 lines** |
+| **Idempotency** | Not guaranteed | Not guaranteed | **Guaranteed & tested** |
+| **CLI** | Separate package | No | **Built-in** |
+| **Style presets** | No | No | **8 built-in** |
+| **Emoji handling** | No | No | **strip, text, keep** |
+| **Confusables** | No | No | **Cyrillic + Greek** |
+| **CSS-safe** | No | No | **Built-in** |
+| **Smart punctuation** | No | No | **Built-in** |
+| **HTML entities** | No | No | **Built-in** |
+| **Fallback** | No | No | **Built-in** |
 
 ## Features
 
@@ -138,7 +145,8 @@ slugify("Straße", replacements={"ß": "ss"})           # "strass"
 
 # Emoji handling
 slugify("Hello 🎉 World", emoji_mode="strip")  # "hello-world"
-slugify("Hello 🎉 World", emoji_mode="keep")   # "hello-world"
+slugify("Hello 🎉 World", emoji_mode="text")   # "helloparty-popperworld"
+slugify("Hello 🎉 World", emoji_mode="keep", allow_unicode=True)  # "hello-🎉-world"
 
 # CSS-safe — prefix digit-leading slugs for CSS class names
 slugify("123 main st", css_safe=True)  # "s-123-main-st"
@@ -167,6 +175,98 @@ slugify.cache_info()   # CacheInfo(hits=0, misses=1, maxsize=512, currsize=1)
 slugify.cache_clear()  # Clear the cache
 ```
 
+## Slugifier — Reusable Builder Pattern
+
+For high-throughput scenarios, create a `Slugifier` once and reuse it. Config validation happens once, not per call:
+
+```python
+from slugany import Slugifier
+
+# Create once
+s = Slugifier.style("camel", max_length=20, stopwords=["the", "a"])
+
+# Reuse
+s("The Quick Brown Fox")   # "quickBrownFox"
+s("A Lazy Dog")            # "lazyDog"
+s("Hello World")           # "helloWorld"
+
+# Inspect config
+s.config  # SlugConfig(style='camel', max_length=20, ...)
+```
+
+## FastAPI / Pydantic Integration
+
+Use slugany with Pydantic for automatic slug generation in API models:
+
+```python
+from pydantic import BaseModel, field_validator
+from slugany import slugify
+
+class Article(BaseModel):
+    title: str
+    slug: str
+
+    @field_validator("slug", mode="before")
+    @classmethod
+    def generate_slug(cls, v: str, info) -> str:
+        if not v and info.data.get("title"):
+            return slugify(info.data["title"], style="kebab")
+        return slugify(v, style="kebab") if v else ""
+
+article = Article(title="Hello World!", slug="")
+print(article.slug)  # "hello-world"
+```
+
+### Slug type with Annotated
+
+```python
+from typing import Annotated
+from pydantic import BaseModel, StringConstraints
+from slugany import slugify, is_slug
+
+Slug = Annotated[str, StringConstraints(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")]
+
+class Tag(BaseModel):
+    name: str
+    slug: Slug
+
+    @field_validator("slug", mode="before")
+    @classmethod
+    def auto_slug(cls, v: str, info) -> str:
+        return slugify(v or info.data.get("name", ""))
+
+tag = Tag(name="Machine Learning", slug="")
+print(tag.slug)  # "machine-learning"
+```
+
+### FastAPI query parameter
+
+```python
+from fastapi import FastAPI, Query
+from slugany import slugify
+
+app = FastAPI()
+
+@app.get("/search")
+async def search(q: str = Query(..., min_length=1)):
+    slug = slugify(q, fallback="all")
+    return {"query": q, "slug": slug}
+```
+
+## deconfuse — Standalone Utility
+
+Replace confusable Unicode homoglyphs with Latin equivalents:
+
+```python
+from slugany import deconfuse
+
+deconfuse("саfe")   # "cafe" — Cyrillic s → Latin c
+deconfuse("αβγ")    # "abg"  — Greek → Latin
+deconfuse("Hello")  # "Hello" — no change
+```
+
+`slugify()` applies deconfusion automatically. Use `deconfuse()` standalone when you need the raw replacement without full slugification.
+
 ## Migration from python-slugify
 
 slugany is designed as a drop-in replacement. The main difference is that all arguments are keyword-only:
@@ -181,6 +281,18 @@ slugify("Hello World", separator="_", stopwords=["the"])
 from slugany import slugify
 slugify("Hello World", separator="_")
 slugify("Hello World", separator="_", stopwords=["the"])
+```
+
+### From unicode-slugify
+
+```python
+# unicode-slugify
+from slugify import slugify
+slugify("Hello World")
+
+# slugany — same result, zero deps
+from slugany import slugify
+slugify("Hello World")  # "hello-world"
 ```
 
 See the [migration guide](https://mathiaspaulenko.github.io/slugany/guide/migration/) for full details.
