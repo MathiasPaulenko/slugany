@@ -405,7 +405,17 @@ class TestSlugify:
 
     def test_mixed_case_idempotency_all_styles(self) -> None:
         """Regression: mixed-case words with consecutive uppercase must be idempotent."""
-        for text in ["mixedCASEWord", "ABCdef", "aBC", "ABCDef", "a B c", "5 A B", "5 A B C", "a b c d e", "a b c d e f"]:
+        for text in [
+            "mixedCASEWord",
+            "ABCdef",
+            "aBC",
+            "ABCDef",
+            "a B c",
+            "5 A B",
+            "5 A B C",
+            "a b c d e",
+            "a b c d e f",
+        ]:
             for style in ["camel", "pascal", "train"]:
                 result = slugify(text, style=style)
                 assert slugify(result, style=style) == result, (

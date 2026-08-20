@@ -10,6 +10,11 @@ import pytest
 from slugany.cli import _build_kwargs, _build_parser, main
 
 
+class _ReconfigurableStringIO(StringIO):
+    def reconfigure(self, encoding: str) -> None:
+        pass
+
+
 def _run_cli(args: list[str], stdin: str | None = None) -> str:
     result = subprocess.run(
         [sys.executable, "-m", "slugany.cli", *args],
@@ -123,6 +128,15 @@ class TestCLIDirect:
         ):
             assert main(["--batch"]) == 0
         assert out.getvalue().strip() == "hello-world\ncafe"
+
+    def test_main_utf8_reconfigure(self) -> None:
+        """Reconfigure path is exercised when streams expose that method."""
+        with (
+            patch("sys.stdin", new=_ReconfigurableStringIO("Caf\u00e9\n")),
+            patch("sys.stdout", new=_ReconfigurableStringIO()) as out,
+        ):
+            assert main([]) == 0
+        assert out.getvalue().strip() == "cafe"
 
     def test_main_no_args_no_stdin(self) -> None:
         with (

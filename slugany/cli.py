@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import sys
 from typing import Any
 
@@ -82,10 +83,10 @@ def _build_kwargs(args: argparse.Namespace) -> dict[str, Any]:
 
 def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdin, sys.stdout):
-        try:
-            stream.reconfigure(encoding="utf-8")
-        except (AttributeError, OSError):
-            pass
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            with contextlib.suppress(AttributeError, OSError):
+                reconfigure(encoding="utf-8")
     parser = _build_parser()
     args = parser.parse_args(argv)
     kwargs = _build_kwargs(args)
