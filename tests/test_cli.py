@@ -16,6 +16,7 @@ def _run_cli(args: list[str], stdin: str | None = None) -> str:
         input=stdin,
         text=True,
         capture_output=True,
+        encoding="utf-8",
     )
     assert result.returncode == 0, f"CLI failed: {result.stderr}"
     return result.stdout.strip()
