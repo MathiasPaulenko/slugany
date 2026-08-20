@@ -5,13 +5,13 @@
 [![Python](https://img.shields.io/pypi/pyversions/slugany.svg)](https://pypi.org/project/slugany/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/MathiasPaulenko/slugany)
-[![Tests](https://img.shields.io/badge/tests-478%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-530%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
 [![mypy](https://img.shields.io/badge/mypy-strict%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 [![ruff](https://img.shields.io/badge/ruff-clean%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 
 A multi-language slugify library with zero runtime dependencies. MIT-licensed, fully typed, and audited for idempotency — a clean alternative to `python-slugify` with no GPL baggage.
 
-> **478 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 13,800+ randomized idempotency checks passed**
+> **530 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 1,100+ randomized contract checks passed**
 
 ## Why slugany?
 
@@ -44,7 +44,7 @@ A multi-language slugify library with zero runtime dependencies. MIT-licensed, f
 - **HTML entity decoding** — `&amp;` → `&` before processing
 - **Emoji handling** — strip, keep, or convert to text
 - **Confusable detection** — Cyrillic homoglyphs → Latin equivalents
-- **Stopwords removal** — filter out common words per language
+- **Stopwords removal** — filter out common words
 - **Custom replacements** — pre- and post-pipeline string substitution
 - **CSS-safe slugs** — prefix digit-leading slugs with `s-`
 - **Max length with word boundaries** — truncate without breaking words
@@ -306,6 +306,8 @@ Full documentation at **[mathiaspaulenko.github.io/slugany](https://mathiaspaule
 - [Languages](https://mathiaspaulenko.github.io/slugany/usage/languages/)
 - [CLI reference](https://mathiaspaulenko.github.io/slugany/usage/cli/)
 - [API reference](https://mathiaspaulenko.github.io/slugany/api/slugify/)
+- [Slugifier](https://mathiaspaulenko.github.io/slugany/api/slugifier/)
+- [deconfuse()](https://mathiaspaulenko.github.io/slugany/api/deconfuse/)
 - [Contracts & guarantees](https://mathiaspaulenko.github.io/slugany/guide/contracts/)
 - [Performance](https://mathiaspaulenko.github.io/slugany/guide/performance/)
 
