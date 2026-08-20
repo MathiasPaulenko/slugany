@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from importlib.metadata import PackageNotFoundError
+
 import slugany
 
 
@@ -25,7 +27,13 @@ class TestImports:
         assert SlugConfig is not None
 
     def test_version(self) -> None:
-        assert slugany.__version__ == "1.0.0"
+        from importlib.metadata import PackageNotFoundError, version
+
+        try:
+            expected = version("slugany")
+        except PackageNotFoundError:
+            expected = "0.0.0+local"
+        assert slugany.__version__ == expected
 
     def test_all(self) -> None:
         assert "slugify" in slugany.__all__
@@ -41,6 +49,16 @@ class TestImports:
             assert "Slug" in slugany.__all__
         except ImportError:
             assert "Slug" not in slugany.__all__
+
+    def test_version_fallback_when_not_installed(self) -> None:
+        import importlib
+        from unittest.mock import patch
+
+        with patch("slugany.version", side_effect=PackageNotFoundError):
+            importlib.reload(slugany)
+            assert slugany.__version__ == "0.0.0+local"
+
+        importlib.reload(slugany)
 
     def test_init_import_error_fallback(self) -> None:
         import builtins

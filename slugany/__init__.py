@@ -1,9 +1,14 @@
+from importlib.metadata import PackageNotFoundError, version
+
 from slugany._config import SlugConfig
 from slugany._slugifier import Slugifier
 from slugany._slugify import deconfuse, slugify, slugify_batch
 from slugany._validator import is_slug
 
-__version__ = "1.0.0"
+try:
+    __version__ = version("slugany")
+except PackageNotFoundError:
+    __version__ = "0.0.0+local"
 
 __all__ = [
     "slugify",
