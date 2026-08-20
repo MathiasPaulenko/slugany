@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-20
+
+### Added
+
+- Emoji `text` mode: replaces emojis with textual descriptions via `_EMOJI_TEXT` mapping table (100+ emojis)
+- Emoji `keep` mode: preserves emojis in output with `allow_unicode=True` validation
+- Greek-to-Latin confusable mappings in `_CONFUSABLES` (α→a, β→b, γ→g, etc.)
+- `deconfuse()` public function for standalone Unicode homoglyph replacement
+- `deconfuse` exported from `slugany` package (`__all__`)
+- `Slugifier` class: stateless slugifier bound to a fixed configuration with `Slugifier.style()` factory
+- `Slugifier.__call__` with `TypeError` on non-string input
+- `Slugifier.__repr__` for debugging
+- `Slugifier.config` read-only property exposing the frozen `SlugConfig`
+- CSS-safe slug prefixing for camel, pascal, and train styles
+- `_apply_css_safe` pipeline step (before `_apply_case_style`)
+- `py.typed` marker (PEP 561) for type checker discovery
+- `"Typing :: Typed"` classifier in `pyproject.toml`
+- CI coverage enforcement at 100% (`--cov-fail-under=100`)
+- Trusted publishing via `pypa/gh-action-pypi-publish@release/v1` with attestations
+- Mkdocstrings API documentation with Google-style docstrings (Args, Returns, Raises, Examples)
+- Comprehensive guide documentation: migration, performance, contracts
+- README with badges (PyPI, CI, coverage, Python versions, License), 3-way comparison table (python-slugify vs unicode-slugify vs slugany)
+- FastAPI/Pydantic integration examples in README
+- Slugifier builder pattern examples in README
+- CLI examples in README
+- 478 tests with 100% coverage
+
+### Changed
+
+- `_handle_emoji` now supports three modes: `strip` (remove), `text` (replace with description), `keep` (preserve with `allow_unicode=True`)
+- `_EMOJI_RE` regex expanded with additional ranges (U+2300-23FF, U+2B00-2BFF, U+1F000-1F0FF, etc.)
+- Pipeline expanded to 18 steps (added `_apply_css_safe` and second `_truncate`/`_trim_separators` pass)
+- `_CONFUSABLES` expanded with Greek uppercase and lowercase mappings
+- All public function docstrings completed with Google-style Args, Returns, Raises, Examples sections
+- README test count badge updated to 478
+- Performance documentation updated with pipeline diagram, short-circuit optimization, and Slugifier reuse section
+- Migration documentation expanded with full parameter mapping table and intentional differences section
+- Contracts documentation expanded with case-insensitive stopwords, CSS-safe output, and multi-character separator contracts
+
+### Fixed
+
+- `_handle_emoji` multi-character emoji matching: iterates over each character in match group for `_EMOJI_TEXT` lookup
+- `emoji_mode='keep'` now raises `ValueError` when `allow_unicode=False` instead of silently preserving emojis
+- Greek letters αβγ now deconfused to `abg` before NFKD fallback (previously produced empty string)
+- Emoji `text` mode correctly replaces emojis with descriptions before transliteration step
+
 ## [0.2.0] - 2026-08-20
 
 ### Added
