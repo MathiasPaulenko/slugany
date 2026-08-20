@@ -26,9 +26,13 @@ slugify("Über Straße", lang="de")  # "ueber-strasse"
 
 - **Zero deps** — no GPL, no text-unidecode, no UnicodeData beyond the stdlib
 - **Multi-language** — built-in tables for Spanish, Portuguese, German, French, and Italian
+- **Confusable deconfusion** — Cyrillic and Greek homoglyphs mapped to Latin via `deconfuse()`
+- **Emoji modes** — `strip`, `text`, or `keep`
 - **Smart punctuation** — normalizes curly quotes, em-dashes, NBSP, zero-width characters, bullets
 - **Case styles** — kebab, snake, camel, pascal, dot, train, filename
+- **CSS-safe output** — valid CSS identifiers even when the slug starts with a digit
 - **CLI included** — `slugany "text"` from the terminal with auto-stdin
+- **Slugifier** — reusable, preconfigured slugifier callable
 - **lru_cache** — results cached automatically (maxsize=512)
 - **Idempotent** — `slugify(slugify(x)) == slugify(x)` guaranteed
 - **Fully typed** — type hints on every public API, `py.typed` marker included
@@ -41,5 +45,6 @@ slugify("Über Straße", lang="de")  # "ueber-strasse"
 - [Languages](usage/languages.md)
 - [CLI reference](usage/cli.md)
 - [API reference](api/slugify.md)
+- [Reusable Slugifier](api/slugifier.md)
 - [Migration from python-slugify](guide/migration.md)
 - [Contracts & guarantees](guide/contracts.md)
