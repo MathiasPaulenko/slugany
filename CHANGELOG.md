@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-08-20
+
+### Fixed
+
+- `__version__` now reads from package metadata so it stays in sync with `pyproject.toml`.
+- Release workflow now correctly extracts the CHANGELOG section for GitHub releases.
+
 ## [1.0.2] - 2026-08-20
 
 ### Fixed
