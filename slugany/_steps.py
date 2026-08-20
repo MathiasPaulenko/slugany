@@ -300,9 +300,7 @@ def _apply_case_style(text: str, config: SlugConfig) -> str:
             w = _normalize_upper(w)
             has_upper = any(c.isupper() for c in w)
             has_lower = any(c.islower() for c in w)
-            has_caseless = any(
-                c.isalpha() and not c.isupper() and not c.islower() for c in w
-            )
+            has_caseless = any(c.isalpha() and not c.isupper() and not c.islower() for c in w)
             if has_upper and (has_lower or has_caseless):
                 parts = _split_case_boundaries(w)
                 if config.style == "pascal":
@@ -321,9 +319,7 @@ def _apply_case_style(text: str, config: SlugConfig) -> str:
                     and len(w) == 1
                     and w.isalpha()
                     and merged_words[-1].isalpha()
-                    and all(
-                        not c.isupper() for c in merged_words[-1]
-                    )
+                    and all(not c.isupper() for c in merged_words[-1])
                 ):
                     merged_words[-1] += w
                 else:
@@ -343,9 +339,7 @@ def _apply_case_style(text: str, config: SlugConfig) -> str:
             first = "".join(first_chars)
         rest = "".join(_capitalize(w) for w in words[1:])
         rest_alpha = [c for c in rest if c.isalpha()]
-        rest_all_single = all(
-            len(w) == 1 for w in words[1:] if w
-        )
+        rest_all_single = all(len(w) == 1 for w in words[1:] if w)
         if (
             len(rest_alpha) > 4
             and all(c.isupper() for c in rest_alpha)
