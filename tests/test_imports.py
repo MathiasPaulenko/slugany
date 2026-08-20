@@ -54,7 +54,7 @@ class TestImports:
         import importlib
         from unittest.mock import patch
 
-        with patch("slugany.version", side_effect=PackageNotFoundError):
+        with patch("importlib.metadata.version", side_effect=PackageNotFoundError):
             importlib.reload(slugany)
             assert slugany.__version__ == "0.0.0+local"
 
