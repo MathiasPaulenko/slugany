@@ -1,10 +1,19 @@
 from slugany._config import SlugConfig
-from slugany._slugify import slugify, slugify_batch
+from slugany._slugifier import Slugifier
+from slugany._slugify import deconfuse, slugify, slugify_batch
 from slugany._validator import is_slug
 
-__version__ = "0.2.0"
+__version__ = "1.0.0"
 
-__all__ = ["slugify", "slugify_batch", "is_slug", "SlugConfig", "__version__"]
+__all__ = [
+    "slugify",
+    "slugify_batch",
+    "is_slug",
+    "SlugConfig",
+    "Slugifier",
+    "deconfuse",
+    "__version__",
+]
 
 try:
     import pydantic  # noqa: F401

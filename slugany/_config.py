@@ -80,6 +80,9 @@ class SlugConfig:
         if separator is not None and (not isinstance(separator, str) or not separator):
             msg = "separator must be a non-empty string."
             raise ValueError(msg)
+        if separator is not None and any(c.isalnum() for c in separator):
+            msg = f"separator must not contain alphanumeric characters, got {separator!r}."
+            raise ValueError(msg)
 
         fallback = kwargs.get("fallback")
         if fallback is not None and not isinstance(fallback, str):

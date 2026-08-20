@@ -84,4 +84,4 @@ class TestPipeline:
     def test_post_replacement_after_lowercase(self) -> None:
         """Regression: post-replacements must run after lowercase."""
         cfg = SlugConfig.from_kwargs(replacements={"hello": "X"})
-        assert _run_pipeline("HELLO", cfg) == "X"
+        assert _run_pipeline("HELLO", cfg) == "x"

@@ -104,7 +104,7 @@ class TestAutoDetect:
 
 class TestNFKDFallback:
     def test_greek(self) -> None:
-        assert slugify("\u03b1\u03b2\u03b3") == ""
+        assert slugify("\u03b1\u03b2\u03b3") == "abg"
 
     def test_cjk(self) -> None:
         assert slugify("\u4f60\u597d") == ""

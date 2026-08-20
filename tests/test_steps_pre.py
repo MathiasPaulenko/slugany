@@ -78,13 +78,18 @@ class TestHandleEmoji:
         assert _handle_emoji("Hello World", SlugConfig()) == "Hello World"
 
     def test_keep_mode(self) -> None:
-        assert (
-            _handle_emoji("Hello \U0001f389", SlugConfig(emoji_mode="keep")) == "Hello \U0001f389"
-        )
+        cfg = SlugConfig(emoji_mode="keep", allow_unicode=True)
+        assert _handle_emoji("Hello \U0001f389", cfg) == "Hello \U0001f389"
+
+    def test_keep_mode_without_unicode_raises(self) -> None:
+        import pytest
+
+        with pytest.raises(ValueError, match="allow_unicode=True"):
+            _handle_emoji("Hello \U0001f389", SlugConfig(emoji_mode="keep"))
 
     def test_text_mode(self) -> None:
         assert (
-            _handle_emoji("Hello \U0001f389", SlugConfig(emoji_mode="text")) == "Hello \U0001f389"
+            _handle_emoji("Hello \U0001f389", SlugConfig(emoji_mode="text")) == "Hello party-popper"
         )
 
 
@@ -131,18 +136,90 @@ class TestTransliterate:
     def test_default_table_eth(self) -> None:
         assert _transliterate("\u00f0e", SlugConfig()) == "de"
 
+    def test_default_table_oslash(self) -> None:
+        """Regression: ø/Ø must transliterate to o/O."""
+        assert _transliterate("\u00f8re", SlugConfig()) == "ore"
+        assert _transliterate("\u00d8re", SlugConfig()) == "Ore"
+
+    def test_default_table_stroke_d(self) -> None:
+        """Regression: đ/Đ must transliterate to d/D."""
+        assert _transliterate("\u0111ai", SlugConfig()) == "dai"
+        assert _transliterate("\u0110ai", SlugConfig()) == "Dai"
+
+    def test_default_table_stroke_l(self) -> None:
+        """Regression: ł/Ł must transliterate to l/L."""
+        assert _transliterate("\u0142odz", SlugConfig()) == "lodz"
+        assert _transliterate("\u0141odz", SlugConfig()) == "Lodz"
+
+    def test_default_table_stroke_h(self) -> None:
+        """Regression: ħ/Ħ must transliterate to h/H."""
+        assert _transliterate("\u0127a", SlugConfig()) == "ha"
+        assert _transliterate("\u0126a", SlugConfig()) == "Ha"
+
+    def test_default_table_dotless_i(self) -> None:
+        """Regression: ı (dotless i) must transliterate to i."""
+        assert _transliterate("beyo\u011flu", SlugConfig()) == "beyoglu"
+
+    def test_default_table_eng(self) -> None:
+        """Regression: ŋ/Ŋ must transliterate to n/N."""
+        assert _transliterate("\u014b", SlugConfig()) == "n"
+        assert _transliterate("\u014a", SlugConfig()) == "N"
+
+    def test_default_table_kra(self) -> None:
+        """Regression: ĸ must transliterate to k."""
+        assert _transliterate("\u0138", SlugConfig()) == "k"
+
+    def test_default_table_t_stroke(self) -> None:
+        """Regression: Ŧ/ŧ must transliterate to T/t."""
+        assert _transliterate("\u0166ana", SlugConfig()) == "Tana"
+        assert _transliterate("\u0167ana", SlugConfig()) == "tana"
+
+    def test_default_table_g_stroke(self) -> None:
+        """Regression: Ǥ/ǥ must transliterate to G/g."""
+        assert _transliterate("\u01e4ulu", SlugConfig()) == "Gulu"
+        assert _transliterate("\u01e5ulu", SlugConfig()) == "gulu"
+
+    def test_default_table_ae_acute(self) -> None:
+        """Regression: Ǽ/ǽ must transliterate to AE/ae.
+
+        NFKD decomposes to Æ+acute which is non-ASCII.
+        """
+        assert _transliterate("\u01fcre", SlugConfig()) == "AEre"
+        assert _transliterate("\u01fdre", SlugConfig()) == "aere"
+
+    def test_default_table_o_stroke_acute(self) -> None:
+        """Regression: Ǿ/ǿ must transliterate to O/o.
+
+        NFKD decomposes to Ø+acute which is non-ASCII.
+        """
+        assert _transliterate("\u01fere", SlugConfig()) == "Ore"
+        assert _transliterate("\u01ffre", SlugConfig()) == "ore"
+
+    def test_default_table_ou(self) -> None:
+        """Regression: Ȣ/ȣ must transliterate to OU/ou."""
+        assert _transliterate("\u0222", SlugConfig()) == "OU"
+        assert _transliterate("\u0223", SlugConfig()) == "ou"
+
+    def test_default_table_dotless_j(self) -> None:
+        """Regression: ȷ (dotless j) must transliterate to j."""
+        assert _transliterate("\u0237", SlugConfig()) == "j"
+
+    def test_default_table_turned_e(self) -> None:
+        """Regression: ǝ (turned e) must transliterate to e."""
+        assert _transliterate("\u01dd", SlugConfig()) == "e"
+
     def test_de_lang_overrides_default(self) -> None:
         assert _transliterate("Stra\u00dfe", SlugConfig(lang="de")) == "Strasse"
 
     def test_emoji_keep_preserves_emoji(self) -> None:
         """Regression: transliterate must preserve emoji when emoji_mode='keep'."""
-        cfg = SlugConfig(emoji_mode="keep")
+        cfg = SlugConfig(emoji_mode="keep", allow_unicode=True)
         assert _transliterate("Hello\U0001f389World", cfg) == "Hello\U0001f389World"
 
     def test_emoji_text_preserves_emoji(self) -> None:
-        """Regression: transliterate must preserve emoji when emoji_mode='text'."""
+        """Regression: transliterate must handle text mode (emoji already replaced)."""
         cfg = SlugConfig(emoji_mode="text")
-        assert _transliterate("Hello\U0001f389World", cfg) == "Hello\U0001f389World"
+        assert _transliterate("Hello party-popperWorld", cfg) == "Hello party-popperWorld"
 
     def test_emoji_strip_removes_emoji(self) -> None:
         """emoji_mode='strip' removes emoji before transliterate (via _handle_emoji)."""

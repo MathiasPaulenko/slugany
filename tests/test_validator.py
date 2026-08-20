@@ -60,6 +60,19 @@ class TestIsSlug:
     def test_unicode_slug_leading_sep(self) -> None:
         assert is_slug("-espa\u00f1a", allow_unicode=True) is False
 
+    def test_unicode_slug_empty_separator(self) -> None:
+        assert is_slug("espa\u00f1a", separator="", allow_unicode=True) is True
+        assert is_slug("espa\u00f1a mundo", separator="", allow_unicode=True) is False
+
+    def test_emoji_slug_allowed(self) -> None:
+        """Regression: is_slug must accept emoji characters when allow_unicode=True."""
+        assert is_slug("🎉-party", allow_unicode=True) is True
+        assert is_slug("🎉", allow_unicode=True) is True
+        assert is_slug("café-🎉-naïve", allow_unicode=True) is True
+
+    def test_emoji_slug_disallowed_in_ascii_mode(self) -> None:
+        assert is_slug("🎉-party") is False
+
     def test_non_string_input_raises(self) -> None:
         with pytest.raises(TypeError):
             is_slug(123)  # type: ignore[arg-type]
@@ -89,3 +102,14 @@ class TestIsSlug:
         elapsed = time.time() - start
         assert result is False
         assert elapsed < 1.0
+
+    def test_combining_marks_allowed(self) -> None:
+        """Regression: is_slug must accept combining marks when allow_unicode=True."""
+        assert is_slug("नमस्ते", allow_unicode=True) is True
+        assert is_slug("مَرْحَبَا", allow_unicode=True) is True
+        assert is_slug("שָׁלוֹם", allow_unicode=True) is True
+
+    def test_combining_marks_with_separator(self) -> None:
+        """Regression: is_slug must accept combining marks with separator."""
+        assert is_slug("नमस्ते-world", allow_unicode=True) is True
+        assert is_slug("नमस्ते", separator="", allow_unicode=True) is True

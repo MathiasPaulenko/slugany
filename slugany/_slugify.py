@@ -62,6 +62,14 @@ def slugify(
         TypeError: If ``text`` is not a string.
         ValueError: If an invalid ``style``, ``lang``, ``emoji_mode``,
             empty ``separator``, or empty replacement key is provided.
+
+    Examples:
+        >>> slugify("Hello World!")
+        'hello-world'
+        >>> slugify("Café résumé", lang="fr")
+        'cafe-resume'
+        >>> slugify("hello world", style="camel")
+        'helloWorld'
     """
     if not isinstance(text, str):
         msg = f"text must be a string, got {type(text).__name__}"
@@ -87,6 +95,35 @@ def slugify(
 
 slugify.cache_info = _slugify_cached.cache_info  # type: ignore[attr-defined]
 slugify.cache_clear = _slugify_cached.cache_clear  # type: ignore[attr-defined]
+
+
+def deconfuse(text: str) -> str:
+    """Replace confusable Unicode characters with their Latin equivalents.
+
+    Converts Cyrillic homoglyphs and Greek letters that visually resemble
+    Latin characters to their ASCII equivalents.
+
+    Args:
+        text: The text to deconfuse.
+
+    Returns:
+        The text with confusable characters replaced.
+
+    Raises:
+        TypeError: If ``text`` is not a string.
+
+    Examples:
+        >>> deconfuse("саfe")
+        'cafe'
+        >>> deconfuse("αβγ")
+        'abg'
+    """
+    if not isinstance(text, str):
+        msg = f"text must be a string, got {type(text).__name__}"
+        raise TypeError(msg)
+    from slugany._tables import _CONFUSABLES
+
+    return text.translate(_CONFUSABLES)
 
 
 def slugify_batch(
@@ -139,6 +176,10 @@ def slugify_batch(
         TypeError: If any text is not a string.
         ValueError: If an invalid ``style``, ``lang``, ``emoji_mode``,
             empty ``separator``, or empty replacement key is provided.
+
+    Examples:
+        >>> slugify_batch(["Hello World", "Foo Bar"])
+        ['hello-world', 'foo-bar']
     """
     return [
         slugify(

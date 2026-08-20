@@ -43,6 +43,25 @@ class TestSlugify:
         assert slugify("-hello-world", max_length=11, word_boundary=True) == "hello-world"
         assert slugify("-hello-", max_length=5, word_boundary=True) == "hello"
 
+    def test_word_boundary_multi_char_separator(self) -> None:
+        """Regression: word_boundary with multi-char separator must not cut mid-separator."""
+        assert (
+            slugify("hello--world--foo", separator="--", max_length=13, word_boundary=True)
+            == "hello--world"
+        )
+        assert (
+            slugify("hello--world--foo", separator="--", max_length=12, word_boundary=True)
+            == "hello--world"
+        )
+        assert (
+            slugify("hello--world--foo", separator="--", max_length=5, word_boundary=True)
+            == "hello"
+        )
+        assert (
+            slugify("hello--world--foo", separator="--", max_length=17, word_boundary=True)
+            == "hello--world--foo"
+        )
+
     def test_stopwords(self) -> None:
         assert slugify("the hello world", stopwords=["the"]) == "hello-world"
 
@@ -82,6 +101,42 @@ class TestSlugify:
 
     def test_fallback(self) -> None:
         assert slugify("!!!", fallback="untitled") == "untitled"
+
+    def test_fallback_normalizes_spaces(self) -> None:
+        """Regression: fallback with spaces must produce a valid slug."""
+        assert slugify("!!!", fallback="hello world") == "hello-world"
+
+    def test_fallback_normalizes_special_chars(self) -> None:
+        """Regression: fallback with special chars must produce a valid slug."""
+        assert slugify("!!!", fallback="hello@world") == "hello-world"
+
+    def test_fallback_normalizes_case(self) -> None:
+        """Regression: fallback must be lowercased when lowercase=True."""
+        assert slugify("!!!", fallback="UPPER CASE") == "upper-case"
+
+    def test_fallback_normalizes_collapses_separators(self) -> None:
+        """Regression: fallback with repeated separators must collapse."""
+        assert slugify("!!!", fallback="hello--world") == "hello-world"
+
+    def test_fallback_normalizes_trims_separators(self) -> None:
+        """Regression: fallback with leading/trailing separators must trim."""
+        assert slugify("!!!", fallback="  hello  ") == "hello"
+
+    def test_fallback_with_style(self) -> None:
+        """Regression: fallback must be normalized before style is applied."""
+        assert slugify("!!!", fallback="hello world", style="camel") == "helloWorld"
+        assert slugify("!!!", fallback="hello world", style="pascal") == "HelloWorld"
+        assert slugify("!!!", fallback="hello world", style="train") == "Hello-World"
+
+    def test_fallback_with_max_length(self) -> None:
+        """Regression: fallback must be truncated to max_length."""
+        assert slugify("!!!", fallback="hello-world-foo", max_length=5) == "hello"
+
+    def test_fallback_transliterated(self) -> None:
+        """Regression: fallback with non-ASCII must be transliterated."""
+        assert slugify("!!!", fallback="café naïve") == "cafe-naive"
+        assert slugify("!!!", fallback="café naïve", allow_unicode=True) == "café-naïve"
+        assert slugify("!!!", fallback="saße", lang="de") == "sasse"
 
     def test_empty(self) -> None:
         assert slugify("") == ""
@@ -173,17 +228,21 @@ class TestSlugify:
         result = slugify("Hello\U0001f389\U0001f600World", emoji_mode="keep", allow_unicode=True)
         assert result == "hello-\U0001f389\U0001f600-world"
 
-    def test_emoji_mode_keep_without_unicode_preserves(self) -> None:
-        """emoji_mode='keep' preserves emojis even without allow_unicode."""
-        assert slugify("Hello\U0001f389World", emoji_mode="keep") == "hello-\U0001f389-world"
+    def test_emoji_mode_keep_without_unicode_raises(self) -> None:
+        """emoji_mode='keep' without allow_unicode raises ValueError."""
+        with pytest.raises(ValueError, match="allow_unicode=True"):
+            slugify("Hello\U0001f389World", emoji_mode="keep")
 
-    def test_emoji_mode_text_preserves_emoji(self) -> None:
-        """emoji_mode='text' preserves emojis in output (same as 'keep')."""
-        result = slugify("Hello\U0001f389World", emoji_mode="text", allow_unicode=True)
-        assert result == "hello-\U0001f389-world"
+    def test_emoji_mode_text_replaces_emoji(self) -> None:
+        """emoji_mode='text' replaces emojis with text descriptions."""
+        result = slugify("Hello\U0001f389World", emoji_mode="text")
+        assert result == "helloparty-popperworld"
 
     def test_css_safe(self) -> None:
         assert slugify("123 hello", css_safe=True) == "s-123-hello"
+
+    def test_css_safe_2024_recap(self) -> None:
+        assert slugify("2024 recap", css_safe=True) == "s-2024-recap"
 
     def test_html_entities_explicit(self) -> None:
         assert slugify("Bob&amp;Cafe", html_entities=True) == "bob-cafe"
@@ -259,23 +318,23 @@ class TestSlugify:
             assert is_slug(s, separator="--"), f"max_length={n} produced invalid slug: {s!r}"
 
     def test_collapse_multi_char_separator(self) -> None:
-        """Regression: multi-char separators with different chars must collapse correctly."""
-        result = slugify("hello", replacements={"hello": "fooababbar"}, separator="ab")
-        assert result == "fooabbar"
+        """Multi-char separators with repeated instances must collapse correctly."""
+        result = slugify("hello", replacements={"hello": "foo--bar"}, separator="--")
+        assert result == "foo--bar"
 
     def test_trim_multi_char_separator_leading(self) -> None:
-        """Regression: repeated multi-char separator at start must trim fully."""
-        result = slugify("xyz", replacements={"xyz": "ababhello"}, separator="ab")
+        """Repeated multi-char separator at start must trim fully."""
+        result = slugify("xyz", replacements={"xyz": "----hello"}, separator="--")
         assert result == "hello"
 
     def test_trim_multi_char_separator_trailing(self) -> None:
-        """Regression: repeated multi-char separator at end must trim fully."""
-        result = slugify("hello", replacements={"hello": "helloabab"}, separator="ab")
+        """Repeated multi-char separator at end must trim fully."""
+        result = slugify("hello", replacements={"hello": "hello----"}, separator="--")
         assert result == "hello"
 
     def test_collapse_multi_char_separator_both_sides(self) -> None:
-        """Regression: collapse and trim multi-char separator from both sides."""
-        result = slugify("x", replacements={"x": "ababhelloabab"}, separator="ab")
+        """Collapse and trim multi-char separator from both sides."""
+        result = slugify("x", replacements={"x": "----hello----"}, separator="--")
         assert result == "hello"
 
     def test_collapse_single_char_separator_still_works(self) -> None:
@@ -293,6 +352,13 @@ class TestSlugify:
     def test_invalid_separator_raises(self) -> None:
         with pytest.raises(ValueError, match="separator"):
             slugify("hello", separator="")
+
+    def test_alphanumeric_separator_raises(self) -> None:
+        """Regression: alphanumeric separators corrupt content and must be rejected."""
+        with pytest.raises(ValueError, match="alphanumeric"):
+            slugify("hello world", separator="ab")
+        with pytest.raises(ValueError, match="alphanumeric"):
+            slugify("hello world", separator="x")
 
     def test_ss_transliteration_auto(self) -> None:
         assert slugify("Straße", lang="auto") == "strasse"
@@ -337,6 +403,24 @@ class TestSlugify:
                 f"train not idempotent for {text!r} -> {result!r}"
             )
 
+    def test_mixed_case_idempotency_all_styles(self) -> None:
+        """Regression: mixed-case words with consecutive uppercase must be idempotent."""
+        for text in ["mixedCASEWord", "ABCdef", "aBC", "ABCDef", "a B c", "5 A B", "5 A B C", "a b c d e", "a b c d e f"]:
+            for style in ["camel", "pascal", "train"]:
+                result = slugify(text, style=style)
+                assert slugify(result, style=style) == result, (
+                    f"{style} not idempotent for {text!r} -> {result!r}"
+                )
+
+    def test_unicode_caseless_alpha_idempotency(self) -> None:
+        """Regression: caseless alpha (CJK) + uppercase boundary must be idempotent."""
+        for text in ["u7WIïこ C", "helloこWorld", "こWorld", "abc你好World"]:
+            for style in ["camel", "pascal", "train"]:
+                result = slugify(text, style=style, allow_unicode=True)
+                assert slugify(result, style=style, allow_unicode=True) == result, (
+                    f"{style} not idempotent for {text!r} -> {result!r}"
+                )
+
     def test_camel_idempotency_custom_separator(self) -> None:
         """Regression: camel idempotency with custom separator."""
         result = slugify("hello world", style="camel", separator="_")
@@ -375,13 +459,14 @@ class TestSlugify:
         """Regression: deconfuse must not convert Cyrillic when allow_unicode=True."""
         assert slugify("\u0441afe", allow_unicode=True) == "\u0441afe"
 
-    def test_emoji_text_mode_preserves_emoji(self) -> None:
-        """Regression: emoji_mode='text' must preserve emoji in output."""
-        assert slugify("Hello\U0001f389World", emoji_mode="text") == "hello-\U0001f389-world"
+    def test_emoji_text_mode_replaces_emoji(self) -> None:
+        """Regression: emoji_mode='text' replaces emoji with text description."""
+        assert slugify("Hello\U0001f389World", emoji_mode="text") == "helloparty-popperworld"
 
-    def test_emoji_keep_mode_preserves_without_unicode(self) -> None:
-        """Regression: emoji_mode='keep' preserves emoji even without allow_unicode."""
-        assert slugify("Hello\U0001f389World", emoji_mode="keep") == "hello-\U0001f389-world"
+    def test_emoji_keep_mode_requires_unicode(self) -> None:
+        """Regression: emoji_mode='keep' without allow_unicode raises ValueError."""
+        with pytest.raises(ValueError, match="allow_unicode=True"):
+            slugify("Hello\U0001f389World", emoji_mode="keep")
 
     def test_stopwords_with_non_alphanumeric_chars(self) -> None:
         """Regression: stopwords containing non-alphanumeric chars must match."""
@@ -390,8 +475,8 @@ class TestSlugify:
 
     def test_post_replacement_after_lowercase(self) -> None:
         """Regression: post-replacements must run after lowercase to match."""
-        assert slugify("HELLO", replacements={"hello": "X"}) == "X"
-        assert slugify("AElfred", replacements={"ae": "X"}) == "Xlfred"
+        assert slugify("HELLO", replacements={"hello": "X"}) == "x"
+        assert slugify("AElfred", replacements={"ae": "X"}) == "xlfred"
 
     def test_replacements_not_double_applied(self) -> None:
         """Regression: replacements must not be applied twice (pre + post)."""
@@ -422,9 +507,18 @@ class TestSlugify:
 
     def test_emoji_keep_watches_and_arrows(self) -> None:
         """Regression: emoji in U+2300-23FF and U+2B00-2BFF ranges must be preserved."""
-        assert slugify("hello \u231a world", emoji_mode="keep") == "hello-\u231a-world"
-        assert slugify("hello \u23f0 world", emoji_mode="keep") == "hello-\u23f0-world"
-        assert slugify("hello \u2b06 world", emoji_mode="keep") == "hello-\u2b06-world"
+        assert (
+            slugify("hello \u231a world", emoji_mode="keep", allow_unicode=True)
+            == "hello-\u231a-world"
+        )
+        assert (
+            slugify("hello \u23f0 world", emoji_mode="keep", allow_unicode=True)
+            == "hello-\u23f0-world"
+        )
+        assert (
+            slugify("hello \u2b06 world", emoji_mode="keep", allow_unicode=True)
+            == "hello-\u2b06-world"
+        )
 
     def test_emoji_strip_watches_and_arrows(self) -> None:
         """Regression: emoji in U+2300-23FF and U+2B00-2BFF ranges must be stripped."""
@@ -450,7 +544,7 @@ class TestSlugify:
     def test_pascal_consecutive_uppercase_idempotent(self) -> None:
         """Regression: pascal with consecutive uppercase letters must be idempotent."""
         r = slugify("a b c", style="pascal")
-        assert r == "ABC"
+        assert r == "Abc"
         assert slugify(r, style="pascal") == r
 
     def test_train_consecutive_uppercase_idempotent(self) -> None:
@@ -458,6 +552,14 @@ class TestSlugify:
         r = slugify("a b c", style="train")
         assert r == "A-B-C"
         assert slugify(r, style="train") == r
+
+    def test_case_style_normalizes_uppercase_words(self) -> None:
+        """Regression: case styles must normalize uppercase words, not preserve them."""
+        assert slugify("HELLO WORLD", style="camel") == "helloWorld"
+        assert slugify("HELLO WORLD", style="pascal") == "HelloWorld"
+        assert slugify("HELLO WORLD", style="train") == "Hello-World"
+        assert slugify("CAFÉ NAÏVE", allow_unicode=True, style="camel") == "caféNaïve"
+        assert slugify("CAFÉ NAÏVE", allow_unicode=True, style="pascal") == "CaféNaïve"
 
     def test_camel_digit_lowercase_idempotent(self) -> None:
         """Regression: camel with digit-to-lowercase boundary must be idempotent."""
@@ -548,3 +650,26 @@ class TestCaseStyleIntegration:
         assert slugify("123 hello", css_safe=True, style="camel") == "s123Hello"
         assert slugify("123 hello", css_safe=True, style="pascal") == "S123Hello"
         assert slugify("123 hello", css_safe=True, style="train") == "S-123-Hello"
+
+
+class TestUnicodeCombiningMarks:
+    def test_devanagari_combining_marks_preserved(self) -> None:
+        """Regression: Devanagari combining vowel signs must not be replaced with separator."""
+        assert slugify("नमस्ते", allow_unicode=True) == "नमस्ते"
+
+    def test_arabic_combining_marks_preserved(self) -> None:
+        """Regression: Arabic diacritical marks must not be replaced with separator."""
+        assert slugify("مَرْحَبَا", allow_unicode=True) == "مَرْحَبَا"
+
+    def test_hebrew_combining_marks_preserved(self) -> None:
+        """Regression: Hebrew vowel points must not be replaced with separator."""
+        assert slugify("שָׁלוֹם", allow_unicode=True) == "שָׁלוֹם"
+
+    def test_combining_marks_with_separator(self) -> None:
+        """Regression: combining marks must stay attached to their base character."""
+        assert slugify("नमस्ते world", allow_unicode=True) == "नमस्ते-world"
+
+    def test_combining_marks_idempotent(self) -> None:
+        """Regression: slugs with combining marks must be idempotent."""
+        r = slugify("नमस्ते world", allow_unicode=True)
+        assert slugify(r, allow_unicode=True) == r

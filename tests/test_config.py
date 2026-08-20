@@ -104,6 +104,15 @@ class TestSlugConfig:
         with pytest.raises(ValueError, match="separator"):
             SlugConfig.from_kwargs(separator="")
 
+    def test_from_kwargs_alphanumeric_separator(self) -> None:
+        """Regression: alphanumeric separators corrupt content via _collapse_separators."""
+        with pytest.raises(ValueError, match="alphanumeric"):
+            SlugConfig.from_kwargs(separator="ab")
+        with pytest.raises(ValueError, match="alphanumeric"):
+            SlugConfig.from_kwargs(separator="x")
+        with pytest.raises(ValueError, match="alphanumeric"):
+            SlugConfig.from_kwargs(separator="a1")
+
     def test_from_kwargs_replacements_dict(self) -> None:
         c = SlugConfig.from_kwargs(replacements={"ll": "2"})
         assert c.replacements == (("ll", "2"),)

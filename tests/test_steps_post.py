@@ -202,15 +202,22 @@ class TestApplyCaseStyle:
         assert _apply_case_style("hello123World", cfg) == "hello123World"
 
     def test_camel_upper_upper_lower_split(self) -> None:
-        """Cover Upper->Upper+lower boundary: 'ABCdef' -> 'AB', 'Cdef'."""
+        """Cover Upper->Upper+lower boundary: 'ABCdef' -> 'A', 'B', 'Cdef' -> camel 'aBCdef'."""
         cfg = SlugConfig.from_kwargs(style="camel")
-        assert _apply_case_style("ABCdef", cfg) == "abCdef"
+        assert _apply_case_style("ABCdef", cfg) == "aBCdef"
 
     def test_split_case_boundaries_empty(self) -> None:
         """Cover empty word edge case in _split_case_boundaries."""
         from slugany._steps import _split_case_boundaries
 
         assert _split_case_boundaries("") == []
+
+    def test_split_case_boundaries_caseless_alpha_uppercase(self) -> None:
+        """Regression: caseless alpha (CJK) followed by uppercase must split."""
+        from slugany._steps import _split_case_boundaries
+
+        assert _split_case_boundaries("こWorld") == ["こ", "World"]
+        assert _split_case_boundaries("abc你好World") == ["abc你好", "World"]
 
 
 class TestCaseStyles:
@@ -274,3 +281,17 @@ class TestApplyCssSafe:
         """Regression: css_safe with train prepends 'S' with separator."""
         cfg = SlugConfig.from_kwargs(css_safe=True, style="train")
         assert _apply_css_safe("123-Hello", cfg) == "S-123-Hello"
+
+
+class TestCssSafe:
+    def test_starts_with_digit(self) -> None:
+        cfg = SlugConfig(css_safe=True)
+        assert _apply_css_safe("2024-recap", cfg) == "s-2024-recap"
+
+    def test_no_digit(self) -> None:
+        cfg = SlugConfig(css_safe=True)
+        assert _apply_css_safe("hello-world", cfg) == "hello-world"
+
+    def test_css_safe_false(self) -> None:
+        cfg = SlugConfig(css_safe=False)
+        assert _apply_css_safe("2024-recap", cfg) == "2024-recap"
