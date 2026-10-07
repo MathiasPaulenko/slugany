@@ -29,7 +29,7 @@ slugify("Über Straße", lang="de")  # "ueber-strasse"
 - **Confusable deconfusion** — Cyrillic and Greek homoglyphs mapped to Latin via `deconfuse()`
 - **Emoji modes** — `strip`, `text`, or `keep`
 - **Smart punctuation** — normalizes curly quotes, em-dashes, NBSP, zero-width characters, bullets
-- **Case styles** — kebab, snake, camel, pascal, dot, train, filename
+- **Case styles** — kebab, snake, camel, pascal, dot, train, filename, url
 - **CSS-safe output** — valid CSS identifiers even when the slug starts with a digit
 - **CLI included** — `slugany "text"` from the terminal with auto-stdin
 - **Slugifier** — reusable, preconfigured slugifier callable

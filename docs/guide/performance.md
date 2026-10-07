@@ -58,11 +58,15 @@ def _run_pipeline(text: str, config: SlugConfig) -> str:
     for step in _STEPS:
         if not text and step is not _apply_fallback:
             continue
+        was_empty = not text
         text = step(text, config)
+        if step is _apply_fallback and was_empty and text:
+            for norm_step in _POST_FALLBACK_STEPS:
+                text = norm_step(text, config)
     return text
 ```
 
-This avoids unnecessary work on inputs that reduce to empty early (e.g., punctuation-only or emoji-only strings).
+This avoids unnecessary work on inputs that reduce to empty early (e.g., punctuation-only or emoji-only strings). When the fallback produces text, it is normalized through `_POST_FALLBACK_STEPS` (deconfuse, transliterate, lowercase, replacements, separator handling, truncate) so the result is still a valid slug.
 
 ### Pure functions
 
@@ -85,7 +89,10 @@ for text in large_corpus:
     slug = s(text)  # config validation happens once, not per call
 ```
 
-The `Slugifier` stores a frozen `SlugConfig` and calls `_run_pipeline` directly, bypassing the `slugify()` wrapper's config construction and validation.
+The `Slugifier` stores a frozen `SlugConfig` and calls the shared `lru_cache`
+directly, bypassing the `slugify()` wrapper's config construction and
+validation. Results are cached in the same cache used by `slugify()`, so
+`slugify.cache_info()` / `slugify.cache_clear()` also cover `Slugifier` calls.
 
 ## Benchmark
 

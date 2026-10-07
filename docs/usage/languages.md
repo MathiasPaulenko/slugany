@@ -11,7 +11,7 @@ slugany supports multi-language transliteration with built-in tables.
 | `de` | German | ä→ae, ö→oe, ü→ue, ß→ss |
 | `fr` | French | œ→oe, æ→ae, à→a |
 | `it` | Italian | è→e, à→a, ì→i |
-| `auto` | Auto | NFKD decomposition fallback |
+| `auto` | Auto | Detects the language from characteristic code points |
 
 ## Usage
 
@@ -25,4 +25,10 @@ slugify("Cœur", lang="fr")             # "coeur"
 slugify("Caffè", lang="it")            # "caffe"
 ```
 
-When `lang="auto"` (default), slugany uses NFKD Unicode decomposition as a fallback for characters not in any language table.
+With `lang="auto"` (default), slugany inspects the text for characteristic
+characters (ñ/¿/¡ for Spanish, ç/ã/õ for Portuguese, ä/ö/ü/ß for German,
+œ/æ for French, à/è/ì/ò/ù for Italian) and picks the table of the most
+frequent match. A Spanish dieresis (ü in *güe*/*güi* words like "agüero")
+is not treated as a German umlaut. Characters not covered by any table are
+handled by NFKD Unicode decomposition plus a default transliteration table
+(ß→ss, æ→ae, œ→oe, ø→o, ł→l, etc.).

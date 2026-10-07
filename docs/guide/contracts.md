@@ -67,10 +67,12 @@ assert slugify("!!!") == ""
 assert slugify("!!!", fallback="untitled") == "untitled"
 ```
 
-The fallback is returned as-is — it should be a valid slug to maintain idempotency:
+The fallback is normalized through the pipeline — transliterated, lowercased,
+and separators applied — so it does not need to be a valid slug itself:
 
 ```python
 assert slugify("!!!", fallback="untitled") == "untitled"
+assert slugify("!!!", fallback="Untitled Post") == "untitled-post"
 assert slugify("untitled") == "untitled"
 ```
 

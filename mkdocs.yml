@@ -49,6 +49,7 @@ nav:
       - Slugifier: api/slugifier.md
       - deconfuse(): api/deconfuse.md
       - SlugConfig: api/slugconfig.md
+      - Slug (Pydantic): api/slug.md
   - Changelog: changelog.md
 
 plugins:

@@ -5,13 +5,13 @@
 [![Python](https://img.shields.io/pypi/pyversions/slugany.svg)](https://pypi.org/project/slugany/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/MathiasPaulenko/slugany)
-[![Tests](https://img.shields.io/badge/tests-530%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-545%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
 [![mypy](https://img.shields.io/badge/mypy-strict%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 [![ruff](https://img.shields.io/badge/ruff-clean%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 
 A multi-language slugify library with zero runtime dependencies. MIT-licensed, fully typed, and audited for idempotency — a clean alternative to `python-slugify` with no GPL baggage.
 
-> **530 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 1,100+ randomized contract checks passed**
+> **545 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 1,000+ randomized contract checks passed**
 
 ## Why slugany?
 
@@ -24,7 +24,7 @@ A multi-language slugify library with zero runtime dependencies. MIT-licensed, f
 | **Languages** | Limited | Limited | **Built-in: es, pt, de, fr, it** |
 | **Caching** | No | No | **`lru_cache` built-in (512)** |
 | **Typing** | Partial | Partial | **Fully typed, `py.typed` marker** |
-| **Core size** | ~1,000+ lines | ~800 lines | **~550 lines** |
+| **Core size** | ~1,000+ lines | ~800 lines | **~1,000 lines** |
 | **Idempotency** | Not guaranteed | Not guaranteed | **Guaranteed & tested** |
 | **CLI** | Separate package | No | **Built-in** |
 | **Style presets** | No | No | **8 built-in** |
@@ -54,7 +54,7 @@ A multi-language slugify library with zero runtime dependencies. MIT-licensed, f
 - **CLI with stdin support** — pipe text directly: `echo "text" | slugany`
 - **Idempotent** — `slugify(slugify(x)) == slugify(x)`, guaranteed and tested
 - **Fully typed** — type hints on every public API, `py.typed` marker (PEP 561)
-- **~550 lines core** — auditable, no bloat
+- **~1,000 lines core** — auditable, no bloat
 
 ## Installation
 
@@ -95,8 +95,8 @@ slugany "hello world" --style train
 # Hello-World
 
 # Truncation with word boundary
-slugany "hello-world-foo-bar" --max-length 10 --word-boundary
-# hello-world
+slugany "hello-world-foo-bar" --max-length 15 --word-boundary
+# hello-world-foo
 
 # Batch mode (one slug per line)
 slugany --batch < input.txt
@@ -115,7 +115,7 @@ slugify("hello world", style="camel")     # "helloWorld"
 slugify("hello world", style="pascal")    # "HelloWorld"
 slugify("hello world", style="dot")       # "hello.world"
 slugify("hello world", style="train")     # "Hello-World"
-slugify("hello world", style="filename")  # "Hello-World"
+slugify("Hello World", style="filename")  # "Hello-World"
 slugify("hello world", style="url")       # "hello-world"
 ```
 
@@ -141,11 +141,11 @@ slugify("the quick brown fox", stopwords=["the", "fox"])  # "quick-brown"
 
 # Custom replacements — substitute before and after transliteration
 slugify("hello world", replacements={"hello": "hi"})  # "hi-world"
-slugify("Straße", replacements={"ß": "ss"})           # "strass"
+slugify("Straße", replacements={"ß": "ss"})           # "strasse"
 
 # Emoji handling
 slugify("Hello 🎉 World", emoji_mode="strip")  # "hello-world"
-slugify("Hello 🎉 World", emoji_mode="text")   # "helloparty-popperworld"
+slugify("Hello 🎉 World", emoji_mode="text")   # "hello-party-popper-world"
 slugify("Hello 🎉 World", emoji_mode="keep", allow_unicode=True)  # "hello-🎉-world"
 
 # CSS-safe — prefix digit-leading slugs for CSS class names
@@ -158,7 +158,7 @@ slugify("!!!", fallback="untitled")  # "untitled"
 slugify("Ñandú", allow_unicode=True)  # "ñandú"
 
 # Max length with word boundary — truncate without breaking words
-slugify("hello world foo bar", max_length=15, word_boundary=True)  # "hello-world"
+slugify("hello world foo bar", max_length=15, word_boundary=True)  # "hello-world-foo"
 
 # Batch processing
 slugify_batch(["Hello World", "Café Résumé"])  # ["hello-world", "cafe-resume"]
@@ -219,16 +219,32 @@ print(article.slug)  # "hello-world"
 
 ### Slug type with Annotated
 
-```python
-from typing import Annotated
-from pydantic import BaseModel, StringConstraints
-from slugany import slugify, is_slug
+slugany ships an optional `Slug` type — `Annotated[str, BeforeValidator(...)]` — that auto-slugifies any string assigned to a field. It's available when `pydantic` is installed:
 
-Slug = Annotated[str, StringConstraints(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")]
+```python
+from pydantic import BaseModel
+from slugany import Slug
 
 class Tag(BaseModel):
     name: str
     slug: Slug
+
+tag = Tag(name="Machine Learning", slug="Machine Learning")
+print(tag.slug)  # "machine-learning"
+```
+
+Or build your own constrained variant:
+
+```python
+from typing import Annotated
+from pydantic import BaseModel, StringConstraints, field_validator
+from slugany import slugify
+
+StrictSlug = Annotated[str, StringConstraints(pattern=r"^[a-z0-9]+(-[a-z0-9]+)*$")]
+
+class Tag(BaseModel):
+    name: str
+    slug: StrictSlug
 
     @field_validator("slug", mode="before")
     @classmethod
@@ -260,7 +276,7 @@ Replace confusable Unicode homoglyphs with Latin equivalents:
 ```python
 from slugany import deconfuse
 
-deconfuse("саfe")   # "cafe" — Cyrillic s → Latin c
+deconfuse("саfe")   # "cafe" — Cyrillic с/а → Latin c/a
 deconfuse("αβγ")    # "abg"  — Greek → Latin
 deconfuse("Hello")  # "Hello" — no change
 ```
