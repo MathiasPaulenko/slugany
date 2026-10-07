@@ -73,6 +73,42 @@ class TestIsSlug:
     def test_emoji_slug_disallowed_in_ascii_mode(self) -> None:
         assert is_slug("🎉-party") is False
 
+    def test_emoji_slug_all_ranges_allowed(self) -> None:
+        """Regression: is_slug must accept every emoji range slugify can emit."""
+        assert is_slug("hello-⌚-world", allow_unicode=True) is True
+        assert is_slug("a-⬆-b", allow_unicode=True) is True
+        assert is_slug("⭐-star", allow_unicode=True) is True
+
+    def test_emoji_zwj_sequence_allowed(self) -> None:
+        """Regression: is_slug must accept ZWJ emoji sequences."""
+        assert is_slug("hi-👨\u200d👩\u200d👧-yo", allow_unicode=True) is True
+
+    def test_emoji_variation_selector_allowed(self) -> None:
+        """Regression: is_slug must accept emoji variation selectors (FE0F)."""
+        assert is_slug("a-\ufe0f-b", allow_unicode=True) is True
+
+    def test_slugify_emoji_keep_output_validates(self) -> None:
+        """Regression: slugify(emoji_mode='keep') output must pass is_slug."""
+        from slugany import slugify
+
+        for text in ("hello ⌚ world", "a⬆b", "hi 👨\u200d👩\u200d👧 yo"):
+            result = slugify(text, emoji_mode="keep", allow_unicode=True)
+            assert is_slug(result, allow_unicode=True), f"invalid slug: {result!r}"
+
+    def test_alphanumeric_separator_raises(self) -> None:
+        """Regression: separators with alphanumerics must raise ValueError."""
+        with pytest.raises(ValueError, match="alphanumeric"):
+            is_slug("aXb", separator="X")
+        with pytest.raises(ValueError, match="alphanumeric"):
+            is_slug("hello", separator="a1")
+
+    def test_whitespace_separator_raises(self) -> None:
+        """Regression: whitespace separators must raise ValueError."""
+        with pytest.raises(ValueError, match="whitespace"):
+            is_slug("hello world", separator=" ")
+        with pytest.raises(ValueError, match="whitespace"):
+            is_slug("hello\tworld", separator="\t")
+
     def test_non_string_input_raises(self) -> None:
         with pytest.raises(TypeError):
             is_slug(123)  # type: ignore[arg-type]

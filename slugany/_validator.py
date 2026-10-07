@@ -21,6 +21,8 @@ def is_slug(s: str, separator: str = "-", *, allow_unicode: bool = False) -> boo
 
     Raises:
         TypeError: If ``s`` or ``separator`` is not a string.
+        ValueError: If ``separator`` contains alphanumeric or whitespace
+            characters.
 
     Examples:
         >>> is_slug("hello-world")
@@ -36,14 +38,21 @@ def is_slug(s: str, separator: str = "-", *, allow_unicode: bool = False) -> boo
     if not isinstance(separator, str):
         msg = f"separator must be a string, got {type(separator).__name__}"
         raise TypeError(msg)
+    if any(c.isalnum() for c in separator):
+        msg = f"separator must not contain alphanumeric characters, got {separator!r}."
+        raise ValueError(msg)
+    if any(c.isspace() for c in separator):
+        msg = "separator must not contain whitespace."
+        raise ValueError(msg)
     if not s:
         return False
     if allow_unicode:
         char_class = r"\w"
         extra = (
             r"\U0001f000-\U0001faff"
-            r"\u2600-\u27bf"
+            r"\u2300-\u23ff\u2600-\u27bf\u2b00-\u2bff"
             r"\u00a9\u00ae\u203c\u2049\u2122\u2139"
+            r"\u200d\ufe0f"
             r"\u2194-\u2199\u21a9\u21aa\u24c2"
             r"\u25aa\u25ab\u25b6\u25c0\u25fb-\u25fe"
             r"\u0300-\u036f"

@@ -47,8 +47,9 @@ def slugify(
             ``pascal``, ``dot``, ``train``, ``filename``, ``url``).
         lang: Language for transliteration
             (``auto``, ``es``, ``pt``, ``de``, ``fr``, ``it``).
-        fallback: String to return when the slug would be empty.
-            This value is returned as-is — it should be a valid slug.
+        fallback: String to use when the slug would be empty. The fallback
+            is normalized through the pipeline (transliterated, lowercased,
+            separators applied), so it does not need to be a valid slug.
         emoji_mode: How to handle emojis (``strip``, ``text``, ``keep``).
         css_safe: Prefix with ``s{separator}`` if the slug starts with a digit.
         html_entities: Decode HTML entities like ``&amp;``.
@@ -61,7 +62,9 @@ def slugify(
     Raises:
         TypeError: If ``text`` is not a string.
         ValueError: If an invalid ``style``, ``lang``, ``emoji_mode``,
-            empty ``separator``, or empty replacement key is provided.
+            empty ``separator``, separator containing alphanumeric or
+            whitespace characters, or empty replacement key is provided;
+            or if ``emoji_mode="keep"`` is used with ``allow_unicode=False``.
 
     Examples:
         >>> slugify("Hello World!")
@@ -161,8 +164,9 @@ def slugify_batch(
             ``pascal``, ``dot``, ``train``, ``filename``, ``url``).
         lang: Language for transliteration
             (``auto``, ``es``, ``pt``, ``de``, ``fr``, ``it``).
-        fallback: String to return when the slug would be empty.
-            This value is returned as-is — it should be a valid slug.
+        fallback: String to use when the slug would be empty. The fallback
+            is normalized through the pipeline (transliterated, lowercased,
+            separators applied), so it does not need to be a valid slug.
         emoji_mode: How to handle emojis (``strip``, ``text``, ``keep``).
         css_safe: Prefix with ``s{separator}`` if the slug starts with a digit.
         html_entities: Decode HTML entities like ``&amp;``.
@@ -175,7 +179,9 @@ def slugify_batch(
     Raises:
         TypeError: If any text is not a string.
         ValueError: If an invalid ``style``, ``lang``, ``emoji_mode``,
-            empty ``separator``, or empty replacement key is provided.
+            empty ``separator``, separator containing alphanumeric or
+            whitespace characters, or empty replacement key is provided;
+            or if ``emoji_mode="keep"`` is used with ``allow_unicode=False``.
 
     Examples:
         >>> slugify_batch(["Hello World", "Foo Bar"])

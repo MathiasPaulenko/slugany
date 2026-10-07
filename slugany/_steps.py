@@ -86,14 +86,22 @@ def _transliterate(text: str, config: SlugConfig) -> str:
         return text
 
     lang = config.lang
-    if lang == "auto":
-        lang = _detect_language(text) or ""
+
+    def _transliterate_word(word: str) -> str:
+        detected = _detect_language(word)
+        if not detected:
+            return word
+        table = _LANGUAGE_TABLES.get(detected)
+        return word.translate(table) if table else word
 
     def _transliterate_segment(segment: str) -> str:
         segment = segment.translate(_DEFAULT_TABLE)
-        table = _LANGUAGE_TABLES.get(lang)
-        if table:
-            segment = segment.translate(table)
+        if lang == "auto":
+            segment = " ".join(_transliterate_word(w) for w in segment.split(" "))
+        else:
+            table = _LANGUAGE_TABLES.get(lang)
+            if table:
+                segment = segment.translate(table)
         segment = unicodedata.normalize("NFKD", segment)
         return segment.encode("ascii", "ignore").decode("ascii")
 
@@ -360,12 +368,25 @@ def _detect_language(text: str) -> str | None:
 
     counts: dict[str, int] = {}
     for lang, ranges in _LANG_DETECT_RANGES.items():
-        count = sum(1 for c in text if any(lo <= ord(c) <= hi for lo, hi in ranges))
+        count = 0
+        for i, c in enumerate(text):
+            if not any(lo <= ord(c) <= hi for lo, hi in ranges):
+                continue
+            if lang == "de" and c in "üÜ" and _is_spanish_dieresis(text, i):
+                continue
+            count += 1
         if count > 0:
             counts[lang] = count
     if not counts:
         return None
     return max(counts, key=lambda k: counts[k])
+
+
+def _is_spanish_dieresis(text: str, i: int) -> bool:
+    """Check if the ü/Ü at index *i* is a Spanish dieresis (güe/güi pattern)."""
+    prev_char = text[i - 1].lower() if i > 0 else ""
+    next_char = text[i + 1].lower() if i + 1 < len(text) else ""
+    return prev_char == "g" and next_char in ("e", "i")
 
 
 def _apply_fallback(text: str, config: SlugConfig) -> str:

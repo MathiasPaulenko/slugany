@@ -101,6 +101,23 @@ class TestAutoDetect:
     def test_auto_mixed(self) -> None:
         assert "espana" in slugify("España und Übung")
 
+    def test_auto_spanish_dieresis(self) -> None:
+        """Regression: Spanish dieresis (güe/güi) must not trigger the de table."""
+        assert slugify("agüero") == "aguero"
+        assert slugify("pingüino") == "pinguino"
+        assert slugify("cigüeña") == "ciguena"
+        assert slugify("vergüenza") == "verguenza"
+
+    def test_auto_german_umlaut_still_detected(self) -> None:
+        """Regression: ü outside güe/güi must still select the de table."""
+        assert slugify("Müller") == "mueller"
+        assert slugify("Güte") == "guete"
+        assert slugify("Übung") == "uebung"
+
+    def test_auto_dieresis_mixed_with_german(self) -> None:
+        """German umlaut evidence must win even when a gü word is present."""
+        assert slugify("Müller agüero") == "mueller-aguero"
+
 
 class TestNFKDFallback:
     def test_greek(self) -> None:

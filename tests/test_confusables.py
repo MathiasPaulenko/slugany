@@ -29,3 +29,18 @@ class TestConfusables:
             deconfuse(None)  # type: ignore[arg-type]
         with pytest.raises(TypeError, match="text must be a string"):
             deconfuse(123)  # type: ignore[arg-type]
+
+    def test_cyrillic_case_consistency(self) -> None:
+        """Regression: lowercase Cyrillic must map to lowercase Latin."""
+        assert slugify("в", lowercase=False) == "b"
+        assert slugify("к", lowercase=False) == "k"
+        assert slugify("м", lowercase=False) == "m"
+        assert slugify("н", lowercase=False) == "h"
+        assert slugify("т", lowercase=False) == "t"
+        assert slugify("ВКМНТ", lowercase=False) == "BKMHT"
+
+    def test_greek_visual_mappings(self) -> None:
+        """Regression: Greek must map to visually identical Latin letters."""
+        assert slugify("ΗΡΧ", lowercase=False) == "HPX"
+        assert slugify("ηρχ", lowercase=False) == "npx"
+        assert slugify("νω", lowercase=False) == "vw"

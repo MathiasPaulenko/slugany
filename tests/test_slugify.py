@@ -360,6 +360,13 @@ class TestSlugify:
         with pytest.raises(ValueError, match="alphanumeric"):
             slugify("hello world", separator="x")
 
+    def test_whitespace_separator_raises(self) -> None:
+        """Regression: whitespace separators produce invalid slugs."""
+        with pytest.raises(ValueError, match="whitespace"):
+            slugify("hello world", separator=" ")
+        with pytest.raises(ValueError, match="whitespace"):
+            slugify("hello world", separator=" - ")
+
     def test_ss_transliteration_auto(self) -> None:
         assert slugify("Straße", lang="auto") == "strasse"
 
@@ -538,11 +545,11 @@ class TestSlugify:
 
     def test_deconfuse_missing_cyrillic_homoglyphs(self) -> None:
         """Regression: Cyrillic homoglyphs в, к, м, н, т must be deconfused."""
-        assert slugify("\u0432") == "b"  # в -> B -> b
-        assert slugify("\u043a") == "k"  # к -> K -> k
-        assert slugify("\u043c") == "m"  # м -> M -> m
-        assert slugify("\u043d") == "h"  # н -> H -> h
-        assert slugify("\u0442") == "t"  # т -> T -> t
+        assert slugify("\u0432") == "b"
+        assert slugify("\u043a") == "k"
+        assert slugify("\u043c") == "m"
+        assert slugify("\u043d") == "h"
+        assert slugify("\u0442") == "t"
         assert slugify("hello \u0432 world") == "hello-b-world"
 
     def test_camel_consecutive_uppercase_idempotent(self) -> None:
@@ -648,7 +655,7 @@ class TestCaseStyleIntegration:
         assert slugify("Hello World Foo", style="filename") == "Hello-World-Foo"
 
     def test_camel_with_unicode(self) -> None:
-        assert slugify("España und Übung", style="camel") == "espanaUndUbung"
+        assert slugify("España und Übung", style="camel") == "espanaUndUebung"
 
     def test_css_safe_with_styles(self) -> None:
         """css_safe prefix must adapt to each style preset's separator and case."""

@@ -57,7 +57,11 @@ class SlugConfig:
 
         Raises:
             ValueError: If an invalid style, lang, emoji_mode, empty
-                separator, or empty replacement key is provided.
+                separator, separator containing alphanumeric or whitespace
+                characters, or empty replacement key is provided.
+            TypeError: If a field receives a value of the wrong type
+                (e.g. non-bool flag, non-int ``max_length``, non-string
+                ``fallback``, malformed ``replacements`` entries).
         """
         style = kwargs.get("style")
         if style is not None and style not in _STYLE_PRESETS:
@@ -82,6 +86,9 @@ class SlugConfig:
             raise ValueError(msg)
         if separator is not None and any(c.isalnum() for c in separator):
             msg = f"separator must not contain alphanumeric characters, got {separator!r}."
+            raise ValueError(msg)
+        if separator is not None and any(c.isspace() for c in separator):
+            msg = "separator must not contain whitespace."
             raise ValueError(msg)
 
         fallback = kwargs.get("fallback")

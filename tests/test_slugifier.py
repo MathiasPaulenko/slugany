@@ -49,3 +49,16 @@ class TestSlugifier:
         s = Slugifier.style("camel")
         assert "Slugifier" in repr(s)
         assert "camel" in repr(s)
+
+    def test_shares_lru_cache(self) -> None:
+        """Slugifier calls use the same lru_cache as slugify()."""
+        slugify.cache_clear()
+        s = Slugifier.style("kebab")
+        s("Hello World")
+        s("Hello World")
+        info = slugify.cache_info()
+        assert info.hits == 1
+        # identical slugify() call with the same config hits the same cache entry
+        slugify("Hello World", style="kebab")
+        assert slugify.cache_info().hits == 2
+        slugify.cache_clear()

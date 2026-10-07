@@ -113,6 +113,15 @@ class TestSlugConfig:
         with pytest.raises(ValueError, match="alphanumeric"):
             SlugConfig.from_kwargs(separator="a1")
 
+    def test_from_kwargs_whitespace_separator(self) -> None:
+        """Regression: whitespace separators produce invalid slugs and must be rejected."""
+        with pytest.raises(ValueError, match="whitespace"):
+            SlugConfig.from_kwargs(separator=" ")
+        with pytest.raises(ValueError, match="whitespace"):
+            SlugConfig.from_kwargs(separator="\t")
+        with pytest.raises(ValueError, match="whitespace"):
+            SlugConfig.from_kwargs(separator="- -")
+
     def test_from_kwargs_replacements_dict(self) -> None:
         c = SlugConfig.from_kwargs(replacements={"ll": "2"})
         assert c.replacements == (("ll", "2"),)
