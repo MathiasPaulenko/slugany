@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-07
+
+### Added
+
+- `is_slug()` now validates `separator` the same way `slugify()` does: separators containing alphanumeric or whitespace characters raise `ValueError`.
+- `Slug` (Pydantic) documentation page and README section.
+- Python 3.14 classifier and CI test matrix entry.
+
+### Changed
+
+- `Slugifier.__call__` now uses the shared `lru_cache`, so `slugify.cache_info()`/`cache_clear()` cover `Slugifier` calls too.
+- `lang="auto"` now detects the language per word instead of per whole text, so mixed-language inputs transliterate each word correctly.
+- `SlugConfig.from_kwargs` rejects separators containing whitespace.
+- Cyrillic confusable mappings are now case-consistent: lowercase в, к, м, н, т map to b, k, m, h, t (previously produced uppercase B, K, M, H, T).
+- Greek confusable mappings now follow visual similarity: Η→H, η→n, Ρ→P, ρ→p, Χ→X, χ→x, ν→v, ω→w (previously phonetic I, i, R, r, CH, ch, n, o).
+- codecov action updated to v5; release workflow permissions scoped per job.
+
+### Fixed
+
+- `is_slug()` no longer rejects valid slugs produced by `emoji_mode="keep"`: emoji ranges U+2300–23FF and U+2B00–2BFF, ZWJ (U+200D) and variation selector (U+FE0F) are now accepted.
+- `is_slug()` no longer accepts meaningless separators (alphanumeric like `"X"`, or whitespace) that `slugify()` rejects.
+- Spanish dieresis (ü in güe/güi words like "agüero", "pingüino") is no longer misdetected as a German umlaut ("agueero" → "aguero").
+- `slugify()`/`slugify_batch()` docstrings: the `fallback` value is normalized through the pipeline (it is not returned as-is), and `Raises` now documents the `emoji_mode="keep"`/`allow_unicode` requirement and separator validation.
+- README: fixed five incorrect example outputs (`emoji_mode="text"`, `replacements`, `max_length`+`word_boundary`, CLI truncation, `filename` preset), the pydantic example missing the `field_validator` import, and stale claims (test count, randomized check count, core size).
+- Docs: `docs/index.md` now lists all 8 case styles (was missing `url`), styles table shows camel's real `lowercase=False` preset, `lang="auto"` is documented as per-word detection, contracts page no longer claims the fallback is returned as-is, and the performance page shows the current `_run_pipeline` code.
+
 ## [1.0.3] - 2026-08-20
 
 ### Fixed

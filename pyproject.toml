@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slugany"
-version = "1.0.3"
+version = "1.1.0"
 description = "Multi-language slugify with zero dependencies. MIT-licensed, fully typed, idempotent alternative to python-slugify."
 readme = "README.md"
 license = "MIT"
@@ -20,6 +20,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
@@ -45,6 +46,7 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.26",
     "mkdocs-include-markdown-plugin>=7.0",
+    "pydantic>=2.0",
 ]
 
 [project.scripts]
