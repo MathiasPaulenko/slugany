@@ -5,13 +5,13 @@
 [![Python](https://img.shields.io/pypi/pyversions/slugany.svg)](https://pypi.org/project/slugany/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen.svg)](https://github.com/MathiasPaulenko/slugany)
-[![Tests](https://img.shields.io/badge/tests-545%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
+[![Tests](https://img.shields.io/badge/tests-618%20passed-blue.svg)](https://github.com/MathiasPaulenko/slugany/actions/workflows/ci.yml)
 [![mypy](https://img.shields.io/badge/mypy-strict%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 [![ruff](https://img.shields.io/badge/ruff-clean%20%E2%9C%93-blue.svg)](https://github.com/MathiasPaulenko/slugany)
 
 A multi-language slugify library with zero runtime dependencies. MIT-licensed, fully typed, and audited for idempotency — a clean alternative to `python-slugify` with no GPL baggage.
 
-> **545 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 1,000+ randomized contract checks passed**
+> **618 tests · 100% coverage · `mypy --strict` clean · `ruff` clean · 1,000+ randomized contract checks passed**
 
 ## Why slugany?
 

@@ -33,6 +33,8 @@ All parameters are keyword-only:
 | `html_entities` | `bool` | `True` | Decode HTML entities |
 | `smart_punctuation` | `bool` | `True` | Normalize smart punctuation |
 
+Passing `None` for any parameter means "not provided": the default is used (or the style preset's value for `separator`/`lowercase` when a `style` is active).
+
 ## Advanced examples
 
 ### Stopwords
