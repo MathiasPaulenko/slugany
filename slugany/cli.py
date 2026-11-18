@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import os
 import sys
 from typing import Any
 
@@ -110,6 +111,16 @@ def main(argv: list[str] | None = None) -> int:
     except (ValueError, TypeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
+    except BrokenPipeError:
+        # The consumer of our output (e.g. `slugany ... | head`) is gone.
+        # Point stdout at devnull so the interpreter does not raise a
+        # second BrokenPipeError while flushing buffers at shutdown.
+        with contextlib.suppress(OSError, ValueError):
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+        return 0
+    except KeyboardInterrupt:
+        return 130
 
     parser.print_help()
     return 0

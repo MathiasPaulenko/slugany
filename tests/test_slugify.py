@@ -690,3 +690,91 @@ class TestUnicodeCombiningMarks:
         """Regression: slugs with combining marks must be idempotent."""
         r = slugify("नमस्ते world", allow_unicode=True)
         assert slugify(r, allow_unicode=True) == r
+
+
+class TestNoneKwargsMeanDefault:
+    """Regression: explicit None kwargs must behave like the defaults.
+
+    max_length=None crashed with a raw TypeError inside _truncate, and
+    html_entities=None / smart_punctuation=None silently disabled their
+    features.
+    """
+
+    def test_max_length_none(self) -> None:
+        assert slugify("hello world", max_length=None) == "hello-world"
+
+    def test_max_length_none_with_limit(self) -> None:
+        assert slugify("hello world", max_length=None) == slugify("hello world")
+
+    def test_html_entities_none(self) -> None:
+        assert slugify("Caf&eacute;", html_entities=None) == "cafe"
+
+    def test_smart_punctuation_none(self) -> None:
+        assert slugify("a’b", smart_punctuation=None) == "a-b"
+
+    def test_lang_none(self) -> None:
+        assert slugify("hello", lang=None) == "hello"
+
+    def test_emoji_mode_none(self) -> None:
+        assert slugify("hello", emoji_mode=None) == "hello"
+
+    def test_fallback_none(self) -> None:
+        assert slugify("!!!", fallback=None) == ""
+
+    def test_stopwords_none(self) -> None:
+        assert slugify("hello world", stopwords=None) == "hello-world"
+
+    def test_replacements_none(self) -> None:
+        assert slugify("hello", replacements=None) == "hello"
+
+    def test_word_boundary_none(self) -> None:
+        assert slugify("hello-world-foo", max_length=10, word_boundary=None) == "hello-worl"
+
+    def test_css_safe_none(self) -> None:
+        assert slugify("123 abc", css_safe=None) == "123-abc"
+
+
+class TestStopwordsValidation:
+    """Regression: non-string stopwords crashed with AttributeError deep in the pipeline."""
+
+    def test_non_string_stopword_raises(self) -> None:
+        with pytest.raises(TypeError, match="stopwords entries must be strings"):
+            slugify("hello world", stopwords=[1, 2])  # type: ignore[list-item]
+
+    def test_bare_string_stopwords_raise(self) -> None:
+        with pytest.raises(TypeError, match="bare string"):
+            slugify("hello world", stopwords="he")  # type: ignore[arg-type]
+
+
+class TestReplacementsValidation:
+    def test_set_replacements_rejected(self) -> None:
+        """Regression: set iteration order is not deterministic across processes."""
+        with pytest.raises(TypeError, match="not deterministic"):
+            slugify("ab", replacements={("a", "b")})  # type: ignore[arg-type]
+
+    def test_bare_string_replacements_rejected(self) -> None:
+        with pytest.raises(TypeError, match="bare string"):
+            slugify("ab", replacements="ab")  # type: ignore[arg-type]
+
+
+class TestMaxLengthValidation:
+    def test_negative_max_length_raises(self) -> None:
+        """Regression: negative max_length silently meant 'no limit'."""
+        with pytest.raises(ValueError, match="non-negative"):
+            slugify("hello world", max_length=-5)
+
+
+class TestUnhashableOptionErrors:
+    """Regression: list-valued options produced 'cannot use list as set element'."""
+
+    def test_lang_list(self) -> None:
+        with pytest.raises(TypeError, match="lang must be a string"):
+            slugify("hello", lang=["es"])  # type: ignore[arg-type]
+
+    def test_style_list(self) -> None:
+        with pytest.raises(TypeError, match="style must be a string"):
+            slugify("hello", style=["camel"])  # type: ignore[arg-type]
+
+    def test_emoji_mode_list(self) -> None:
+        with pytest.raises(TypeError, match="emoji_mode must be a string"):
+            slugify("hello", emoji_mode=["strip"])  # type: ignore[arg-type]

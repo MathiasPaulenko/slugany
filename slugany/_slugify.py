@@ -12,6 +12,13 @@ def _slugify_cached(text: str, config: SlugConfig) -> str:
     return _run_pipeline(text, config)
 
 
+def _slugify_one(text: str, config: SlugConfig) -> str:
+    if not isinstance(text, str):
+        msg = f"text must be a string, got {type(text).__name__}"
+        raise TypeError(msg)
+    return _slugify_cached(text, config)
+
+
 def slugify(
     text: str,
     *,
@@ -93,7 +100,7 @@ def slugify(
         html_entities=html_entities,
         smart_punctuation=smart_punctuation,
     )
-    return _slugify_cached(text, config)
+    return _slugify_one(text, config)
 
 
 slugify.cache_info = _slugify_cached.cache_info  # type: ignore[attr-defined]
@@ -149,8 +156,12 @@ def slugify_batch(
 ) -> list[str]:
     """Slugify multiple texts in a single call.
 
+    The configuration is built and validated once, so invalid keyword
+    arguments raise before any text is processed.
+
     Args:
-        texts: Iterable of strings to slugify.
+        texts: Iterable of strings to slugify. A bare string is rejected;
+            wrap it in a list (``texts=["..."]``) to slugify a single text.
         separator: Separator between words. Defaults to ``"-"`` (or the
             style preset's separator when a style is specified).
         lowercase: Whether to lowercase the output. Defaults to ``True``
@@ -177,7 +188,7 @@ def slugify_batch(
         A list of slugified strings, one per input text.
 
     Raises:
-        TypeError: If any text is not a string.
+        TypeError: If ``texts`` is a bare string or any text is not a string.
         ValueError: If an invalid ``style``, ``lang``, ``emoji_mode``,
             empty ``separator``, separator containing alphanumeric or
             whitespace characters, or empty replacement key is provided;
@@ -187,23 +198,26 @@ def slugify_batch(
         >>> slugify_batch(["Hello World", "Foo Bar"])
         ['hello-world', 'foo-bar']
     """
-    return [
-        slugify(
-            text,
-            separator=separator,
-            lowercase=lowercase,
-            max_length=max_length,
-            word_boundary=word_boundary,
-            stopwords=stopwords,
-            allow_unicode=allow_unicode,
-            replacements=replacements,
-            style=style,
-            lang=lang,
-            fallback=fallback,
-            emoji_mode=emoji_mode,
-            css_safe=css_safe,
-            html_entities=html_entities,
-            smart_punctuation=smart_punctuation,
+    if isinstance(texts, str):
+        msg = (
+            "texts must be an iterable of strings, got a bare string; "
+            "wrap it in a list, e.g. slugify_batch(['...'])."
         )
-        for text in texts
-    ]
+        raise TypeError(msg)
+    config = SlugConfig.from_kwargs(
+        separator=separator,
+        lowercase=lowercase,
+        max_length=max_length,
+        word_boundary=word_boundary,
+        stopwords=stopwords,
+        allow_unicode=allow_unicode,
+        replacements=replacements,
+        style=style,
+        lang=lang,
+        fallback=fallback,
+        emoji_mode=emoji_mode,
+        css_safe=css_safe,
+        html_entities=html_entities,
+        smart_punctuation=smart_punctuation,
+    )
+    return [_slugify_one(text, config) for text in texts]

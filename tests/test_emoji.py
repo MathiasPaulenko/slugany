@@ -85,6 +85,7 @@ class TestEmojiMixed:
 
 
 class TestEmojiUnknownMode:
-    def test_unknown_mode_returns_text(self) -> None:
-        cfg = SlugConfig(emoji_mode="unknown")
-        assert _handle_emoji("Hello 🎉 World", cfg) == "Hello 🎉 World"
+    def test_unknown_mode_rejected_at_construction(self) -> None:
+        """Regression: invalid emoji_mode must raise at config construction."""
+        with pytest.raises(ValueError, match="Invalid emoji_mode"):
+            SlugConfig(emoji_mode="unknown")

@@ -4,6 +4,7 @@ import html
 import re
 import unicodedata
 from collections.abc import Callable
+from functools import lru_cache
 
 from slugany._config import SlugConfig
 from slugany._tables import _CONFUSABLES, _DEFAULT_TABLE, _LANGUAGE_TABLES, _PUNCTUATION_TABLE
@@ -67,11 +68,10 @@ def _handle_emoji(text: str, config: SlugConfig) -> str:
             return " ".join(_EMOJI_TEXT.get(ord(c), "") for c in m.group(0)).strip()
 
         return _EMOJI_RE.sub(_replace, text)
-    if config.emoji_mode == "keep":
-        if not config.allow_unicode:
-            msg = "emoji_mode='keep' requires allow_unicode=True"
-            raise ValueError(msg)
-        return text
+    # emoji_mode == "keep" (the only remaining validated mode)
+    if not config.allow_unicode:
+        msg = "emoji_mode='keep' requires allow_unicode=True"
+        raise ValueError(msg)
     return text
 
 
@@ -157,27 +157,34 @@ def _lowercase(text: str, config: SlugConfig) -> str:
 def _remove_stopwords(text: str, config: SlugConfig) -> str:
     if not config.stopwords:
         return text
+    lower_sw = _normalized_stopword_set(config)
+    return " ".join(w for w in text.split() if _strip_non_word(w, config).lower() not in lower_sw)
 
-    def _strip_non_word(sw: str) -> str:
-        if config.allow_unicode:
-            return "".join(c for c in sw if _is_unicode_word_char(c))
-        return _ASCII_ALNUM_RE.sub("", sw)
 
-    def _normalize_stopword(sw: str) -> str:
-        if not config.allow_unicode:
-            sw = sw.translate(_CONFUSABLES)
-            sw = sw.translate(_DEFAULT_TABLE)
-            lang = config.lang
-            if lang == "auto":
-                lang = _detect_language(sw) or ""
-            table = _LANGUAGE_TABLES.get(lang)
-            if table:
-                sw = sw.translate(table)
-            sw = unicodedata.normalize("NFKD", sw).encode("ascii", "ignore").decode("ascii")
-        return _strip_non_word(sw).lower()
+@lru_cache(maxsize=64)
+def _normalized_stopword_set(config: SlugConfig) -> frozenset[str]:
+    """Normalize a config's stopwords once; configs are frozen and hashable."""
+    return frozenset(_normalize_stopword(sw, config) for sw in config.stopwords)
 
-    lower_sw = {_normalize_stopword(sw) for sw in config.stopwords}
-    return " ".join(w for w in text.split() if _strip_non_word(w).lower() not in lower_sw)
+
+def _strip_non_word(sw: str, config: SlugConfig) -> str:
+    if config.allow_unicode:
+        return "".join(c for c in sw if _is_unicode_word_char(c))
+    return _ASCII_ALNUM_RE.sub("", sw)
+
+
+def _normalize_stopword(sw: str, config: SlugConfig) -> str:
+    if not config.allow_unicode:
+        sw = sw.translate(_CONFUSABLES)
+        sw = sw.translate(_DEFAULT_TABLE)
+        lang = config.lang
+        if lang == "auto":
+            lang = _detect_language(sw) or ""
+        table = _LANGUAGE_TABLES.get(lang)
+        if table:
+            sw = sw.translate(table)
+        sw = unicodedata.normalize("NFKD", sw).encode("ascii", "ignore").decode("ascii")
+    return _strip_non_word(sw, config).lower()
 
 
 def _replace_non_alphanumeric(text: str, config: SlugConfig) -> str:

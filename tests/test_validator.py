@@ -149,3 +149,51 @@ class TestIsSlug:
         """Regression: is_slug must accept combining marks with separator."""
         assert is_slug("नमस्ते-world", allow_unicode=True) is True
         assert is_slug("नमस्ते", separator="", allow_unicode=True) is True
+
+    def test_trailing_newline_rejected(self) -> None:
+        """Regression: '$' matched before a trailing newline, accepting invalid slugs."""
+        assert is_slug("hello\n") is False
+        assert is_slug("hello-world\n") is False
+        assert is_slug("hello\n", allow_unicode=True) is False
+        assert is_slug("hello-world\n", allow_unicode=True) is False
+
+    def test_newline_inside_rejected(self) -> None:
+        assert is_slug("hello\nworld") is False
+        assert is_slug("hello\nworld", allow_unicode=True) is False
+
+    def test_valid_still_accepted_after_anchor_fix(self) -> None:
+        assert is_slug("hello-world") is True
+        assert is_slug("hello-world", allow_unicode=True) is True
+        assert is_slug("hello.world.foo", separator=".") is True
+        assert is_slug("hello--world", separator="--") is True
+
+    def test_separator_overlapping_word_class_no_redos(self) -> None:
+        """Regression: separator chars inside the Unicode word class caused
+        catastrophic backtracking (minutes-long hangs on crafted input)."""
+        import time
+
+        s = "a" + "_a" * 2000 + "!"
+        start = time.time()
+        assert is_slug(s, separator="_", allow_unicode=True) is False
+        assert time.time() - start < 1.0
+
+    def test_double_separator_rejected_when_separator_is_word_char(self) -> None:
+        """Regression: "a__b" was accepted because word runs absorbed the separator."""
+        assert is_slug("a__b", separator="_", allow_unicode=True) is False
+        assert is_slug("a_b", separator="_", allow_unicode=True) is True
+        assert is_slug("a_b_c", separator="_", allow_unicode=True) is True
+        assert is_slug("_a_b", separator="_", allow_unicode=True) is False
+        assert is_slug("a_b_", separator="_", allow_unicode=True) is False
+
+    def test_emoji_separator_overlap(self) -> None:
+        """Separator code points that are also valid emoji must not be absorbed."""
+        assert is_slug("a⌚⌚b", separator="⌚", allow_unicode=True) is False
+        assert is_slug("a⌚b", separator="⌚", allow_unicode=True) is True
+
+    def test_multi_char_separator_overlap_no_redos(self) -> None:
+        import time
+
+        s = "a" + "--a" * 2000 + "!"
+        start = time.time()
+        assert is_slug(s, separator="--", allow_unicode=True) is False
+        assert time.time() - start < 1.0

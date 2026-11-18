@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from slugany._config import SlugConfig
-from slugany._slugify import _slugify_cached
+from slugany._slugify import _slugify_one
 
 
 class Slugifier:
@@ -68,7 +68,7 @@ class Slugifier:
         if not isinstance(text, str):
             msg = f"text must be a string, got {type(text).__name__}"
             raise TypeError(msg)
-        return _slugify_cached(text, self._config)
+        return _slugify_one(text, self._config)
 
     def __repr__(self) -> str:
         return f"Slugifier(config={self._config!r})"

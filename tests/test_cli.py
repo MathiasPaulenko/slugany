@@ -224,3 +224,38 @@ class TestCLIDirect:
         assert kwargs["fallback"] == "x"
         assert kwargs["emoji_mode"] == "keep"
         assert kwargs["css_safe"] is True
+
+
+class TestCLISignalAndPipe:
+    def test_broken_pipe_returns_zero(self) -> None:
+        """Regression: a closed output pipe (e.g. `slugany x | head`) raised a traceback."""
+        import builtins
+
+        with (
+            patch("sys.stdout", new=StringIO()),
+            patch("sys.stderr", new=StringIO()),
+            patch.object(builtins, "print", side_effect=BrokenPipeError()),
+            patch("os.open", return_value=-1),
+            patch("os.dup2", return_value=None),
+        ):
+            assert main(["Hello World"]) == 0
+
+    def test_keyboard_interrupt_returns_130(self) -> None:
+        """Regression: Ctrl-C during processing printed a traceback."""
+        with (
+            patch("sys.stdout", new=StringIO()),
+            patch("sys.stderr", new=StringIO()),
+            patch("slugany.cli.slugify", side_effect=KeyboardInterrupt()),
+        ):
+            assert main(["Hello World"]) == 130
+
+    def test_broken_pipe_real_devnull_path(self) -> None:
+        """The devnull redirect path runs without touching a real terminal."""
+        import builtins
+
+        with (
+            patch("sys.stdout", new=StringIO()),
+            patch("sys.stderr", new=StringIO()),
+            patch.object(builtins, "print", side_effect=BrokenPipeError()),
+        ):
+            assert main(["Hello World"]) == 0

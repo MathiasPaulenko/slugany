@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 
 from slugany import slugify_batch
+from slugany._config import SlugConfig
 
 
 class TestSlugifyBatch:
@@ -61,3 +64,26 @@ class TestSlugifyBatch:
 
     def test_batch_iterator(self) -> None:
         assert slugify_batch(iter(["Hello", "World"])) == ["hello", "world"]
+
+    def test_bare_string_rejected(self) -> None:
+        """Regression: a bare string was slugified char by char, producing nonsense."""
+        with pytest.raises(TypeError, match="bare string"):
+            slugify_batch("hello world")  # type: ignore[arg-type]
+
+    def test_invalid_kwargs_fail_fast_on_empty_input(self) -> None:
+        """Regression: invalid kwargs were silently ignored when texts was empty."""
+        with pytest.raises(ValueError, match="Invalid style"):
+            slugify_batch([], style="invalid")
+
+    def test_config_built_once(self) -> None:
+        """Regression: the config was rebuilt (and re-validated) for every item."""
+        calls = []
+        original = SlugConfig.from_kwargs
+
+        def counting(**kwargs: object) -> SlugConfig:
+            calls.append(1)
+            return original(**kwargs)
+
+        with patch.object(SlugConfig, "from_kwargs", staticmethod(counting)):
+            slugify_batch(["a b", "c d", "e f"])
+        assert len(calls) == 1
