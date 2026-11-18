@@ -5,7 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.1.1] - 2026-11-18
+
+### Added
+
+- `SlugConfig` now validates on direct construction too (`__post_init__`): invalid separators, negative or non-integer `max_length`, wrong-typed flags, invalid `style`/`lang`/`emoji_mode` and malformed `stopwords`/`replacements` raise immediately instead of corrupting output or crashing deep in the pipeline. An empty `separator` remains allowed for direct construction (advanced use).
+
+### Changed
+
+- Explicit `None` keyword arguments now uniformly mean "not provided" and fall back to the default (or the style preset value for `separator`/`lowercase`). Previously `max_length=None` crashed inside the pipeline, `html_entities=None` and `smart_punctuation=None` silently disabled their features, and `lang=None`/`emoji_mode=None` raised.
+- `slugify_batch()` builds and validates the configuration once instead of per item, and invalid keyword arguments now raise even when `texts` is empty (fail-fast).
+- Bare strings are rejected where a collection of strings is expected: `slugify_batch("text")`, `stopwords="the"` and `replacements="ab"` raise `TypeError` with guidance instead of producing silently wrong results.
+- `replacements` no longer accepts sets or frozensets: their iteration order is not deterministic across processes (string hash randomization), which made results depend on `PYTHONHASHSEED`.
+- `_handle_emoji` no longer carries an unreachable fallback branch; invalid emoji modes are rejected at config construction.
+
+### Fixed
+
+- `is_slug()` accepted slugs with a trailing newline (`is_slug("hello
+")` was `True`) because the `$` anchor also matches just before a final newline. Validation now uses full-match anchoring.
+- `is_slug()` hung for minutes on crafted input when the separator overlapped the Unicode word class (e.g. `separator="_"` with `allow_unicode=True`): overlapping quantifiers caused catastrophic backtracking. Word runs are now guarded, making matching linear; this also fixes double separators (`"a__b"`) being accepted in that configuration.
+- `stopwords` containing non-string entries crashed with `AttributeError` deep in the pipeline; they now raise a clear `TypeError` at configuration time.
+- List-valued `lang`/`style`/`emoji_mode` produced the cryptic "cannot use 'list' as a set element" error; they now raise a descriptive `TypeError`.
+- CLI: a closed output pipe (e.g. `slugany "x" | head`) printed a `BrokenPipeError` traceback; the CLI now exits cleanly. `KeyboardInterrupt` exits with code 130 instead of a traceback.
+
 
 ## [1.1.0] - 2026-10-07
 
